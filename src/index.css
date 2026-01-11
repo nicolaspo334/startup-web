@@ -1,0 +1,27 @@
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700;800&display=swap");
+
+/* Reset básico */
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* IMPORTANTE: quitamos el flex centrado que trae Vite */
+body {
+  display: block;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background: #0b0f16;
+}
+
+/* IMPORTANTE: evitamos límites de ancho/padding del template */
+#root {
+  max-width: none;
+  padding: 0;
+  margin: 0;
+}
