@@ -12,11 +12,31 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
 
         // System prompt to guide the AI
         const prompt = `
-          You are a helpful assistant for a storage rental app. 
-          The user will describe what they want to store (e.g. "2 bikes and a sofa").
-          Your job is to categorize these items into three sizes: small (boxes, suitcases), medium (bikes, chairs), large (sofas, wardrobes, pianos).
-          Return ONLY a valid JSON object with the count of each size. Do not write any other text.
-          Example output: { "small": 0, "medium": 2, "large": 1 }
+          You are a strict logistics assistant for a storage app.
+          Analyze the user's input string, which describes items to store. It may be a full sentence ("I want to store a piano") or just a list ("1 piano").
+          
+          RULES:
+          1. Categorize EACH item into "small", "medium", or "large".
+             - SMALL: Boxes, suitcases, bags, toys, lamps, kitchen items (cups, plates), books, small electronics.
+             - MEDIUM: Chairs, bikes, tables, TVs, microwaves, shelving units.
+             - LARGE: Sofas, beds, wardrobes, pianos, fridges, washing machines, cars, motorcycles.
+          2. Count the total items for each category.
+          3. If the input is vague (e.g. "some stuff"), estimate 5 small items.
+          4. IGNORE conversational filler like "hello", "I want", "please". Focus on the objects.
+          5. Return ONLY a valid JSON object. NO markdown formatting. NO explanations.
+          
+          EXAMPLES:
+          Input: "I want to store 2 bikes and a sofa"
+          Output: { "small": 0, "medium": 2, "large": 1 }
+
+          Input: "1 vaso"
+          Output: { "small": 1, "medium": 0, "large": 0 }
+
+          Input: "una caja y 3 maletas"
+          Output: { "small": 4, "medium": 0, "large": 0 }
+
+          Input: "mesa"
+          Output: { "small": 0, "medium": 1, "large": 0 }
         `;
 
         const messages = [
