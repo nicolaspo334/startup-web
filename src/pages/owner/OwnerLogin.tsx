@@ -1,17 +1,35 @@
+
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function OwnerLogin() {
   const [usuario, setUsuario] = useState("");
   const [contrasena, setContrasena] = useState("");
 
-  const onSubmit = (e: React.FormEvent) => {
+  const navigate = useNavigate();
+
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // ✅ Aquí luego haremos fetch a tu API (Cloudflare) para verificar en SQL
-    console.log("LOGIN dueño ->", { usuario, contrasena });
+    try {
+      const res = await fetch("/api/owner-login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: usuario, password: contrasena }),
+      });
 
-    alert("Login enviado (placeholder). Luego lo conectamos a la base de datos.");
+      const data = await res.json() as any;
+
+      if (res.ok) {
+        // En un futuro aquí guardaríamos el token o sesión
+        navigate("/dueno");
+      } else {
+        alert("Error: " + (data.error || "Credenciales incorrectas"));
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error de conexión");
+    }
   };
 
   return (

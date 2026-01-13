@@ -1,15 +1,33 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function UserLogin() {
   const [usuario, setUsuario] = useState("");
   const [contrasena, setContrasena] = useState("");
 
-  const onSubmit = (e: React.FormEvent) => {
+  const navigate = useNavigate();
+
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Luego lo conectamos a la BD (D1/SQL) vía API
-    console.log("LOGIN usuario ->", { usuario, contrasena });
-    alert("Login enviado (placeholder). Luego lo conectamos a la base de datos.");
+
+    try {
+      const res = await fetch("/api/user-login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: usuario, password: contrasena }),
+      });
+
+      const data = await res.json() as any;
+
+      if (res.ok) {
+        navigate("/usuario");
+      } else {
+        alert("Error: " + (data.error || "Credenciales incorrectas"));
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error de conexión");
+    }
   };
 
   return (

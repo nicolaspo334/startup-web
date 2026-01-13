@@ -1,15 +1,35 @@
+
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function UserRegister() {
   const [usuario, setUsuario] = useState("");
   const [contrasena, setContrasena] = useState("");
 
-  const onSubmit = (e: React.FormEvent) => {
+  const navigate = useNavigate();
+
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Luego lo conectamos a la BD (D1/SQL) vía API
-    console.log("REGISTER usuario ->", { usuario, contrasena });
-    alert("Registro enviado (placeholder). Luego lo conectamos a la base de datos.");
+
+    try {
+      const res = await fetch("/api/user-register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: usuario, password: contrasena }),
+      });
+
+      const data = await res.json() as any;
+
+      if (res.ok) {
+        alert("¡Cuenta de usuario creada! Inicia sesión.");
+        navigate("/usuario/login");
+      } else {
+        alert("Error: " + (data.error || "No se pudo registrar"));
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error de conexión");
+    }
   };
 
   return (
