@@ -20,7 +20,7 @@ export default function UserLogin() {
       const data = await res.json() as any;
 
       if (res.ok) {
-        navigate("/usuario");
+        navigate("/buscar");
       } else {
         alert("Error: " + (data.error || "Credenciales incorrectas"));
       }
