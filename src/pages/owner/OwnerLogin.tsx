@@ -21,8 +21,8 @@ export default function OwnerLogin() {
       const data = await res.json() as any;
 
       if (res.ok) {
-        // En un futuro aquí guardaríamos el token o sesión
-        navigate("/dueno");
+        localStorage.setItem("owner_id", data.id);
+        navigate("/dueno/dashboard");
       } else {
         alert("Error: " + (data.error || "Credenciales incorrectas"));
       }

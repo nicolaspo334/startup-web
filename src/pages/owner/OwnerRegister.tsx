@@ -20,8 +20,9 @@ export default function OwnerRegister() {
       const data = await res.json() as any;
 
       if (res.ok) {
-        alert("¡Cuenta creada con éxito! Ahora inicia sesión.");
-        navigate("/dueno/login");
+        alert("¡Cuenta creada con éxito!");
+        localStorage.setItem("owner_id", data.id);
+        navigate("/dueno/dashboard");
       } else {
         alert("Error: " + (data.error || "No se pudo registrar"));
       }
