@@ -5,6 +5,7 @@ import OwnerAuth from "./pages/owner/OwnerAuth";
 import OwnerLogin from "./pages/owner/OwnerLogin";
 import OwnerRegister from "./pages/owner/OwnerRegister";
 import OwnerDashboard from "./pages/owner/OwnerDashboard";
+import OwnerAddSpace from "./pages/owner/OwnerAddSpace";
 
 import UserAuth from "./pages/user/UserAuth";
 import UserLogin from "./pages/user/UserLogin";
@@ -20,6 +21,7 @@ export default function App() {
       <Route path="/dueno/login" element={<OwnerLogin />} />
       <Route path="/dueno/register" element={<OwnerRegister />} />
       <Route path="/dueno/dashboard" element={<OwnerDashboard />} />
+      <Route path="/dueno/add-space" element={<OwnerAddSpace />} />
 
       {/* Flujo Usuario */}
       <Route path="/usuario" element={<UserAuth />} />

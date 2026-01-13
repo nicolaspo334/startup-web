@@ -1,0 +1,335 @@
+
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+
+export default function OwnerAddSpace() {
+    const navigate = useNavigate();
+    const [loading, setLoading] = useState(false);
+
+    // Form Fields
+    const [name, setName] = useState("");
+    const [address, setAddress] = useState("");
+    const [type, setType] = useState("Trastero");
+    const [size, setSize] = useState("");
+    const [capSmall, setCapSmall] = useState("");
+    const [capMedium, setCapMedium] = useState("");
+    const [capLarge, setCapLarge] = useState("");
+
+    // Image
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [imageBase64, setImageBase64] = useState<string>("");
+
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            // Create preview
+            const url = URL.createObjectURL(file);
+            setImagePreview(url);
+
+            // Convert to Base64
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const base64String = reader.result as string;
+                setImageBase64(base64String);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const onSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+
+        const ownerId = localStorage.getItem("owner_id");
+        if (!ownerId) {
+            alert("Error de sesión. Vuelve a iniciar sesión.");
+            navigate("/dueno/login");
+            return;
+        }
+
+        try {
+            const res = await fetch("/api/owner-add-space", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    owner_id: ownerId,
+                    name,
+                    address,
+                    type,
+                    size_m2: parseFloat(size) || 0,
+                    capacity_small: parseInt(capSmall) || 0,
+                    capacity_medium: parseInt(capMedium) || 0,
+                    capacity_large: parseInt(capLarge) || 0,
+                    image_base64: imageBase64
+                }),
+            });
+
+            const data = await res.json() as any;
+
+            if (res.ok) {
+                alert("¡Espacio añadido con éxito!");
+                navigate("/dueno/dashboard");
+            } else {
+                alert("Error: " + (data.error || "No se pudo guardar"));
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Error de conexión");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div style={styles.page}>
+            <img src="/owner-dashboard-bg.jpg" alt="Background" style={styles.bg} />
+            <div style={styles.overlay} />
+
+            <div style={styles.content}>
+                <div style={styles.card}>
+                    <h2 style={styles.title}>Alta de nuevo espacio</h2>
+
+                    <form onSubmit={onSubmit} style={styles.formGrid}>
+
+                        {/* Left Column: Image Area */}
+                        <div style={styles.leftCol}>
+                            <label style={styles.imageDropZone}>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleImageChange}
+                                    style={{ display: 'none' }}
+                                />
+                                {imagePreview ? (
+                                    <img src={imagePreview} alt="Preview" style={styles.previewImg} />
+                                ) : (
+                                    <div style={styles.placeholderContent}>
+                                        <span style={{ fontSize: 40 }}>📷</span>
+                                        <span>Añadir imagen</span>
+                                    </div>
+                                )}
+                            </label>
+                        </div>
+
+                        {/* Right Column: Fields */}
+                        <div style={styles.rightCol}>
+                            <div style={styles.fieldGroup}>
+                                <label style={styles.label}>Nombre del espacio</label>
+                                <input
+                                    style={styles.input}
+                                    value={name}
+                                    onChange={e => setName(e.target.value)}
+                                    placeholder="Ej. Trastero Centro"
+                                    required
+                                />
+                            </div>
+
+                            <div style={styles.fieldGroup}>
+                                <label style={styles.label}>Dirección</label>
+                                <input
+                                    style={styles.input}
+                                    value={address}
+                                    onChange={e => setAddress(e.target.value)}
+                                    placeholder="Calle Principal 123"
+                                    required
+                                />
+                            </div>
+
+                            <div style={styles.row}>
+                                <div style={styles.fieldGroup}>
+                                    <label style={styles.label}>Tipo</label>
+                                    <select
+                                        style={styles.input}
+                                        value={type}
+                                        onChange={e => setType(e.target.value)}
+                                    >
+                                        <option value="Trastero">Trastero</option>
+                                        <option value="Habitación">Habitación</option>
+                                        <option value="Garaje">Garaje</option>
+                                        <option value="Otro">Otro</option>
+                                    </select>
+                                </div>
+
+                                <div style={styles.fieldGroup}>
+                                    <label style={styles.label}>Tamaño (m²)</label>
+                                    <input
+                                        style={styles.input}
+                                        type="number"
+                                        value={size}
+                                        onChange={e => setSize(e.target.value)}
+                                        placeholder="Ej. 15"
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            <div style={styles.fieldGroup}>
+                                <label style={styles.label}>Capacidad (Nº objetos)</label>
+                                <div style={styles.capacityRow}>
+                                    <input
+                                        style={styles.inputSmall}
+                                        type="number"
+                                        placeholder="Pequeño"
+                                        value={capSmall}
+                                        onChange={e => setCapSmall(e.target.value)}
+                                    />
+                                    <input
+                                        style={styles.inputSmall}
+                                        type="number"
+                                        placeholder="Mediano"
+                                        value={capMedium}
+                                        onChange={e => setCapMedium(e.target.value)}
+                                    />
+                                    <input
+                                        style={styles.inputSmall}
+                                        type="number"
+                                        placeholder="Grande"
+                                        value={capLarge}
+                                        onChange={e => setCapLarge(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+
+                            <div style={styles.actions}>
+                                <button type="button" onClick={() => navigate("/dueno/dashboard")} style={styles.cancelBtn}>
+                                    Cancelar
+                                </button>
+                                <button type="submit" disabled={loading} style={styles.submitBtn}>
+                                    {loading ? "Guardando..." : "Dar de alta"}
+                                </button>
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+const styles: Record<string, React.CSSProperties> = {
+    page: { position: "relative", minHeight: "100vh", width: "100%", overflow: "hidden" },
+    bg: { position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" },
+    overlay: {
+        position: "absolute",
+        inset: 0,
+        background: "rgba(0,0,0,0.6)",
+        backdropFilter: "blur(5px)"
+    },
+    content: {
+        position: "relative",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        minHeight: "100vh",
+        padding: 20
+    },
+    card: {
+        width: "min(900px, 100%)",
+        background: "rgba(255,255,255,0.95)",
+        borderRadius: 20,
+        padding: "30px",
+        boxShadow: "0 20px 40px rgba(0,0,0,0.3)"
+    },
+    title: {
+        fontFamily: '"Playfair Display", serif',
+        fontSize: 28,
+        margin: "0 0 24px 0",
+        textAlign: "center"
+    },
+    formGrid: {
+        display: "grid",
+        gridTemplateColumns: "1fr 1.2fr",
+        gap: 30,
+    },
+    leftCol: {
+        display: "flex",
+        flexDirection: "column",
+    },
+    rightCol: {
+        display: "flex",
+        flexDirection: "column",
+        gap: 16
+    },
+    imageDropZone: {
+        width: "100%",
+        aspectRatio: "4/3",
+        border: "3px dashed #ccc",
+        borderRadius: 12,
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        cursor: "pointer",
+        background: "#f9f9f9",
+        overflow: "hidden"
+    },
+    placeholderContent: {
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: 10,
+        color: "#888",
+        fontWeight: 500
+    },
+    previewImg: {
+        width: "100%",
+        height: "100%",
+        objectFit: "cover"
+    },
+    fieldGroup: {
+        display: "flex",
+        flexDirection: "column",
+        gap: 6
+    },
+    label: {
+        fontWeight: 600,
+        fontSize: 14,
+        color: "#444"
+    },
+    input: {
+        padding: "10px 12px",
+        fontSize: 16,
+        borderRadius: 8,
+        border: "1px solid #ccc",
+        outline: "none"
+    },
+    row: {
+        display: "flex",
+        gap: 12
+    },
+    capacityRow: {
+        display: "flex",
+        gap: 10
+    },
+    inputSmall: {
+        flex: 1,
+        padding: "10px",
+        fontSize: 14,
+        borderRadius: 8,
+        border: "1px solid #ccc",
+        outline: "none"
+    },
+    actions: {
+        display: "flex",
+        gap: 12,
+        marginTop: 20,
+        justifyContent: "flex-end"
+    },
+    cancelBtn: {
+        padding: "10px 20px",
+        borderRadius: 10,
+        border: "1px solid #888",
+        background: "transparent",
+        cursor: "pointer",
+        fontWeight: 600
+    },
+    submitBtn: {
+        padding: "10px 24px",
+        borderRadius: 10,
+        border: "none",
+        background: "black",
+        color: "white",
+        cursor: "pointer",
+        fontWeight: 600
+    }
+};

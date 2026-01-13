@@ -4,11 +4,16 @@ import { useNavigate } from "react-router-dom";
 
 interface Space {
     id: string;
+    owner_id: string;
+    name: string;
     address: string;
     type: string;
     size_m2: number;
-    allowed_items: string; // "small,medium,large" or comma separated
-    image_files: string;
+    capacity_small: number;
+    capacity_medium: number;
+    capacity_large: number;
+    allowed_items: string;
+    image_base64: string;
 }
 
 export default function OwnerDashboard() {
@@ -68,7 +73,7 @@ export default function OwnerDashboard() {
                             {/* Here we would link to the "Add Space" form later */}
                             <button
                                 style={styles.addBtn}
-                                onClick={() => alert("Próximamente: Formulario añadir espacio")}
+                                onClick={() => navigate("/dueno/add-space")}
                             >
                                 Comenzar
                             </button>
@@ -80,9 +85,13 @@ export default function OwnerDashboard() {
                                 <div key={space.id} style={styles.spaceCard}>
                                     {/* Image placeholder or real image logic */}
                                     <div style={styles.imageContainer}>
-                                        {space.image_files ? (
+                                        {space.image_base64 ? (
                                             <img
-                                                src={`/${space.image_files.split(',')[0]}`}
+                                                src={
+                                                    space.image_base64.startsWith("data:")
+                                                        ? space.image_base64
+                                                        : `/api/images/${space.image_base64}`
+                                                }
                                                 alt="Espacio"
                                                 style={styles.spaceImg}
                                             />
@@ -92,12 +101,15 @@ export default function OwnerDashboard() {
                                     </div>
 
                                     <div style={styles.cardInfo}>
-                                        <h3 style={styles.cardTitle}>{space.address}</h3>
-                                        <p style={styles.cardDetail}>{space.type} • {space.size_m2}m²</p>
+                                        <h3 style={styles.cardTitle}>{space.name || "Sin nombre"}</h3>
+                                        <p style={styles.cardDetail}>{space.address}</p>
+                                        <p style={styles.cardDetail}>{space.type} • {space.size_m2} m²</p>
+
                                         <div style={styles.tags}>
-                                            {space.allowed_items.split(',').map(tag => (
-                                                <span key={tag} style={styles.tag}>{tag}</span>
-                                            ))}
+                                            {/* Simple badge for capacity */}
+                                            <span style={styles.tag}>P: {space.capacity_small || 0}</span>
+                                            <span style={styles.tag}>M: {space.capacity_medium || 0}</span>
+                                            <span style={styles.tag}>G: {space.capacity_large || 0}</span>
                                         </div>
                                     </div>
 
@@ -108,7 +120,7 @@ export default function OwnerDashboard() {
                             ))}
 
                             {/* Add more card */}
-                            <div style={styles.addCardSmall} onClick={() => alert("Añadir otro espacio")}>
+                            <div style={styles.addCardSmall} onClick={() => navigate("/dueno/add-space")}>
                                 <div style={styles.plusIconSmall}>+</div>
                                 <span>Añadir espacio</span>
                             </div>
