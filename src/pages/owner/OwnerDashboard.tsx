@@ -57,7 +57,10 @@ export default function OwnerDashboard() {
 
             <div style={styles.content}>
                 <div style={styles.topBar}>
-                    <h1 style={styles.title}>Mis Espacios</h1>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 15 }}>
+                        <button onClick={() => navigate("/dueno")} style={styles.backBtn}>←</button>
+                        <h1 style={styles.title}>Mis Espacios</h1>
+                    </div>
                     <button onClick={handleLogout} style={styles.logoutBtn}>Cerrar Sesión</button>
                 </div>
 
@@ -173,6 +176,19 @@ const styles: Record<string, React.CSSProperties> = {
         padding: "8px 16px",
         borderRadius: 8,
         cursor: "pointer"
+    },
+    backBtn: {
+        background: "rgba(255,255,255,0.2)",
+        border: "1px solid rgba(255,255,255,0.4)",
+        borderRadius: "50%",
+        width: 40,
+        height: 40,
+        color: "white",
+        fontSize: 20,
+        cursor: "pointer",
+        display: "flex", // Keep flex for centering
+        justifyContent: "center",
+        alignItems: "center"
     },
     mainArea: {
         flex: 1,
