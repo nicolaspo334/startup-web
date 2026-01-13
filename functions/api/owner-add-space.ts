@@ -11,6 +11,8 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
             owner_id,
             name,
             address,
+            province,
+            country,
             type,
             size_m2,
             capacity_small,
@@ -27,15 +29,13 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
         const allowed_items = "";
         let filename = "";
 
-        // Process R2 Upload if image provided
+        // Process R2 Upload
         if (image_base64 && image_base64.includes("base64,")) {
             const matches = image_base64.match(/^data:(.+);base64,(.+)$/);
             if (matches && matches.length === 3) {
-                const contentType = matches[1]; // e.g., image/jpeg
+                const contentType = matches[1];
                 const base64Data = matches[2];
 
-                // Convert Base64 to ArrayBuffer
-                // using standard Atob for workers/browsers
                 const binaryString = atob(base64Data);
                 const len = binaryString.length;
                 const bytes = new Uint8Array(len);
@@ -43,38 +43,66 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
                     bytes[i] = binaryString.charCodeAt(i);
                 }
 
-                // Create unique filename
                 const ext = contentType.split('/')[1] || "png";
                 filename = `space-${owner_id}-${Date.now()}.${ext}`;
 
-                // Upload to R2
                 await ctx.env.BUCKET.put(filename, bytes, {
                     httpMetadata: { contentType: contentType }
                 });
             }
         }
 
-        // Store the FILENAME in the 'image_base64' column (reusing the column name as requested by user constraints)
-        // Ideally we would rename the column to 'image_path' but we are sticking to user schema.
+        // --- GEOCODING LOGIC ---
+        let lat = 0;
+        let lng = 0;
+
+        // Construct detailed query for better precision
+        // If province/country provided, append them.
+        let queryParts = [address];
+        if (province) queryParts.push(province);
+        if (country) queryParts.push(country);
+        const qStr = queryParts.join(", ");
+
+        try {
+            const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(qStr)}&format=json&limit=1`, {
+                headers: {
+                    'User-Agent': 'GuardyApp/1.0'
+                }
+            });
+            const geoData = await geoRes.json() as any[];
+            if (geoData && geoData.length > 0) {
+                lat = parseFloat(geoData[0].lat);
+                lng = parseFloat(geoData[0].lon);
+            }
+        } catch (err) {
+            console.error("Geocoding failed", err);
+        }
+        // -----------------------
+
+        // Store
         await ctx.env.SPACES_DB.prepare(
             `INSERT INTO spaces (
-             id, owner_id, name, address, type, size_m2, 
+             id, owner_id, name, address, province, country, type, size_m2, 
              capacity_small, capacity_medium, capacity_large, 
-             allowed_items, image_base64
+             allowed_items, image_base64, lat, lng
            ) 
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
         ).bind(
             id,
             owner_id,
             name,
             address,
+            province || null,
+            country || null,
             type,
             size_m2,
             capacity_small,
             capacity_medium,
             capacity_large,
             allowed_items,
-            filename // Note: Storing filename here!
+            filename,
+            lat,
+            lng
         ).run();
 
         return Response.json({ ok: true, id });

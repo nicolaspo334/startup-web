@@ -11,6 +11,8 @@ export default function OwnerEditSpace() {
     // Form Fields
     const [name, setName] = useState("");
     const [address, setAddress] = useState("");
+    const [province, setProvince] = useState("");
+    const [country, setCountry] = useState("");
     const [type, setType] = useState("Trastero");
     const [size, setSize] = useState("");
     const [capSmall, setCapSmall] = useState("");
@@ -36,6 +38,8 @@ export default function OwnerEditSpace() {
                     const s = data.space;
                     setName(s.name);
                     setAddress(s.address);
+                    setProvince(s.province || "");
+                    setCountry(s.country || "");
                     setType(s.type);
                     setSize(String(s.size_m2));
                     setCapSmall(String(s.capacity_small));
@@ -113,6 +117,8 @@ export default function OwnerEditSpace() {
                     owner_id: ownerId,
                     name,
                     address,
+                    province,
+                    country,
                     type,
                     size_m2: parseFloat(size) || 0,
                     capacity_small: parseInt(capSmall) || 0,
@@ -193,6 +199,29 @@ export default function OwnerEditSpace() {
                                     placeholder="Calle Principal 123"
                                     required
                                 />
+                            </div>
+
+                            <div style={styles.row}>
+                                <div style={styles.fieldGroup}>
+                                    <label style={styles.label}>Provincia</label>
+                                    <input
+                                        style={styles.input}
+                                        value={province}
+                                        onChange={e => setProvince(e.target.value)}
+                                        placeholder="Madrid"
+                                        required
+                                    />
+                                </div>
+                                <div style={styles.fieldGroup}>
+                                    <label style={styles.label}>País</label>
+                                    <input
+                                        style={styles.input}
+                                        value={country}
+                                        onChange={e => setCountry(e.target.value)}
+                                        placeholder="España"
+                                        required
+                                    />
+                                </div>
                             </div>
 
                             <div style={styles.row}>
