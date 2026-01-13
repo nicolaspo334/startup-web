@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-// import { useNavigate } from "react-router-dom"; 
+import { useNavigate } from "react-router-dom";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -32,7 +32,7 @@ interface Space {
 }
 
 export default function UserSearch() {
-    // const navigate = useNavigate(); // Unused for now
+    const navigate = useNavigate(); // Used for Back button
     const [query, setQuery] = useState("");
     const [loadingAI, setLoadingAI] = useState(false);
 
@@ -98,6 +98,9 @@ export default function UserSearch() {
         <div style={styles.page}>
             {/* Search Bar Overlay */}
             <div style={styles.searchContainer}>
+                <button onClick={() => navigate("/usuario")} style={styles.backBtn}>
+                    ←
+                </button>
                 <form onSubmit={handleSearch} style={styles.searchForm}>
                     <input
                         style={styles.input}
@@ -167,10 +170,21 @@ const styles: Record<string, React.CSSProperties> = {
         transform: "translateX(-50%)",
         zIndex: 1000,
         width: "90%",
-        maxWidth: 500,
+        maxWidth: 550,
         display: "flex",
-        flexDirection: "column",
-        gap: 8
+        alignItems: "center",
+        gap: 12
+    },
+    backBtn: {
+        background: "white",
+        border: "none",
+        width: 48,
+        height: 48,
+        borderRadius: "50%",
+        fontSize: 24,
+        cursor: "pointer",
+        boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
+        fontWeight: "bold"
     },
     searchForm: {
         display: "flex",
