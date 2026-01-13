@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom"; 
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -32,7 +32,7 @@ interface Space {
 }
 
 export default function UserSearch() {
-    const navigate = useNavigate();
+    // const navigate = useNavigate(); // Unused for now
     const [query, setQuery] = useState("");
     const [loadingAI, setLoadingAI] = useState(false);
 
