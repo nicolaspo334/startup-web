@@ -59,7 +59,13 @@ export default function UserSearch() {
 
     const handleSearch = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!query.trim()) return;
+
+        // If empty query, reset to show all spaces
+        if (!query.trim()) {
+            setFilteredSpaces(allSpaces);
+            setRequirements(null);
+            return;
+        }
 
         setLoadingAI(true);
         try {
@@ -170,7 +176,7 @@ const styles: Record<string, React.CSSProperties> = {
         transform: "translateX(-50%)",
         zIndex: 1000,
         width: "90%",
-        maxWidth: 550,
+        maxWidth: 750, // Widened from 550
         display: "flex",
         alignItems: "center",
         gap: 12
