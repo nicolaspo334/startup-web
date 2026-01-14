@@ -2,127 +2,120 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 
-// Simple Calendar Component
-const CalendarView = ({ reservations }: { reservations: any[] }) => {
-    const today = new Date();
-    const [month, setMonth] = useState(today.getMonth());
-    const [year] = useState(today.getFullYear());
+interface Reservation {
+    id: number;
+    user_id: string;
+    username: string;
+    start_date: string;
+    end_date: string;
+    qty_small: number;
+    qty_medium: number;
+    qty_large: number;
+}
 
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const firstDay = new Date(year, month, 1).getDay(); // 0 = Sunday
-
-    const getDaysArray = () => {
-        const days: (number | null)[] = [];
-        // Empty slots for days before first day of month
-        // Adjust for Monday start if needed, but standard US Sunday start for simplicity or Monday? 
-        // Let's do Monday start (Spanish Style)
-        const startOffset = firstDay === 0 ? 6 : firstDay - 1;
-
-        for (let i = 0; i < startOffset; i++) days.push(null);
-        for (let i = 1; i <= daysInMonth; i++) days.push(i);
-        return days;
-    };
-
-    const isReserved = (day: number) => {
-        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-        return reservations.some(r => dateStr >= r.start_date && dateStr <= r.end_date);
-    };
-
-    return (
-        <div style={{ border: "1px solid #ddd", borderRadius: 8, padding: 10, width: "100%" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
-                <button onClick={() => setMonth(m => m === 0 ? 11 : m - 1)}>&lt;</button>
-                <span style={{ fontWeight: "bold" }}>{year} / {month + 1}</span>
-                <button onClick={() => setMonth(m => m === 11 ? 0 : m + 1)}>&gt;</button>
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4, textAlign: "center", fontSize: 12 }}>
-                {["L", "M", "X", "J", "V", "S", "D"].map(d => <div key={d} style={{ fontWeight: "bold" }}>{d}</div>)}
-                {getDaysArray().map((d, i) => (
-                    <div
-                        key={i}
-                        style={{
-                            padding: 6,
-                            borderRadius: 4,
-                            background: (d && isReserved(d)) ? "#4CAF50" : "transparent",
-                            color: (d && isReserved(d)) ? "white" : "inherit"
-                        }}
-                    >
-                        {d || ""}
-                    </div>
-                ))}
-            </div>
-        </div>
-    );
-};
+interface Space {
+    id: string;
+    name: string;
+    address: string;
+}
 
 export default function OwnerSpaceAnalytics() {
     const { id } = useParams();
     const navigate = useNavigate();
-    const [data, setData] = useState<any>(null);
+    const [space, setSpace] = useState<Space | null>(null);
+    const [reservations, setReservations] = useState<Reservation[]>([]);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (id) {
-            fetch(`/api/get-space-stats?space_id=${id}`)
-                .then(res => res.json())
-                .then(d => {
-                    if (d.ok) setData(d);
-                })
-                .catch(err => console.error(err));
-        }
+        const ownerId = localStorage.getItem("owner_id");
+        if (!ownerId || !id) return;
+
+        fetch(`/api/get-owner-analytics?space_id=${id}&owner_id=${ownerId}`)
+            .then(res => res.json())
+            .then((data: any) => {
+                if (data.ok) {
+                    setSpace(data.space);
+                    setReservations(data.reservations);
+                } else {
+                    alert("Error al cargar datos");
+                    navigate("/dueno/dashboard");
+                }
+            })
+            .catch(err => console.error(err))
+            .finally(() => setLoading(false));
     }, [id]);
 
-    if (!data) return <div style={{ padding: 40 }}>Cargando...</div>;
+    // Calendar Helpers
+    const today = new Date();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
 
-    const { space, reservations, stats } = data;
+    // Determine which days have reservations
+    const getDayStatus = (day: number) => {
+        const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        // Check if any reservation overlaps this day
+        const hasRes = reservations.some(r => dateStr >= r.start_date && dateStr <= r.end_date);
+        return hasRes ? "#4CAF50" : "#eee"; // Green if booked, Grey if free
+    };
+
+    // Quick Stats
+    const reservationsThisMonth = reservations.filter(r => {
+        const rDate = new Date(r.start_date);
+        return rDate.getMonth() === currentMonth && rDate.getFullYear() === currentYear;
+    }).length;
+
+    // Mock Revenue (e.g., 50 EUR per reservation avg)
+    const revenue = reservationsThisMonth * 50;
+
+    if (loading) return <div style={{ padding: 40 }}>Cargando...</div>;
+    if (!space) return null;
 
     return (
-        <div style={styles.container}>
-            <div style={styles.card}>
-                {/* Header */}
-                <div style={styles.header}>
-                    <div>
-                        <h1 style={styles.title}>{space.name}</h1>
-                        <p style={styles.address}>{space.address}</p>
-                    </div>
-                </div>
+        <div style={styles.page}>
+            <div style={styles.container}>
+                <h2 style={styles.header}>{space.name}</h2>
+                <p style={styles.subHeader}>{space.address}</p>
 
-                <div style={styles.contentGrid}>
+                <div style={styles.grid}>
                     {/* Left: Calendar */}
-                    <div style={styles.leftCol}>
-                        <h3 style={styles.sectionTitle}>Calendario de Ocupación</h3>
-                        <CalendarView reservations={reservations} />
-
-                        <button style={styles.acceptBtn} onClick={() => navigate("/dueno/dashboard")}>
-                            Aceptar
-                        </button>
+                    <div style={styles.calendarCard}>
+                        <h3 style={styles.cardTitle}>Calendario ({today.toLocaleString('default', { month: 'long' })})</h3>
+                        <div style={styles.calendarGrid}>
+                            {Array.from({ length: daysInMonth }, (_, i) => i + 1).map(day => (
+                                <div key={day} style={{ ...styles.dayCell, background: getDayStatus(day) }}>
+                                    {day}
+                                </div>
+                            ))}
+                        </div>
                     </div>
 
                     {/* Right: Stats & List */}
                     <div style={styles.rightCol}>
                         <div style={styles.statsRow}>
                             <div style={styles.statBox}>
-                                <span style={styles.statLabel}>Ingresos este mes</span>
-                                <span style={styles.statValue}>TODO €</span>
+                                <span style={styles.statVal}>{reservationsThisMonth}</span>
+                                <span style={styles.statLabel}>Res. este mes</span>
                             </div>
                             <div style={styles.statBox}>
-                                <span style={styles.statLabel}>Reservas este mes</span>
-                                <span style={styles.statValue}>{stats.count_month}</span>
+                                <span style={styles.statVal}>{revenue} €</span>
+                                <span style={styles.statLabel}>Ingresos</span>
                             </div>
                         </div>
 
-                        <div style={styles.listContainer}>
-                            <h3 style={styles.sectionTitle}>Lista de Reservas</h3>
-                            <div style={styles.list}>
-                                {reservations.map((r: any) => (
+                        <div style={styles.listCard}>
+                            <h3 style={styles.cardTitle}>Lista de reservas</h3>
+                            <div style={styles.listScroll}>
+                                {reservations.map(r => (
                                     <div key={r.id} style={styles.resItem}>
-                                        <div style={styles.resRow}>
-                                            <span style={styles.resName}>{r.username || "Usuario"}</span>
+                                        <div style={styles.resHeader}>
+                                            <span style={styles.resUser}>{r.username}</span>
                                             <span style={styles.resDate}>{r.start_date}</span>
                                         </div>
-                                        <div style={styles.resDetails}>
-                                            {r.qty_small > 0 && <span>P:{r.qty_small} </span>}
-                                            {r.qty_medium > 0 && <span>M:{r.qty_medium} </span>}
-                                            {r.qty_large > 0 && <span>G:{r.qty_large}</span>}
+                                        <div style={styles.resObj}>
+                                            {r.qty_small > 0 && `📦 Peq: ${r.qty_small} `}
+                                            {r.qty_medium > 0 && `📦 Med: ${r.qty_medium} `}
+                                            {r.qty_large > 0 && `📦 Gra: ${r.qty_large}`}
                                         </div>
                                     </div>
                                 ))}
@@ -130,100 +123,107 @@ export default function OwnerSpaceAnalytics() {
                         </div>
                     </div>
                 </div>
+
+                <div style={styles.footer}>
+                    <button style={styles.acceptBtn} onClick={() => navigate("/dueno/dashboard")}>
+                        Aceptar
+                    </button>
+                </div>
             </div>
         </div>
     );
 }
 
 const styles: Record<string, React.CSSProperties> = {
-    container: {
-        width: "100vw",
-        height: "100vh",
-        background: "#f0f0f0",
+    page: {
+        minHeight: "100vh",
+        background: "#f0f2f5",
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
         padding: 20
     },
-    card: {
+    container: {
+        width: "min(1000px, 95%)",
         background: "white",
-        width: "100%",
-        maxWidth: 900,
         borderRadius: 20,
-        boxShadow: "0 10px 30px rgba(0,0,0,0.1)",
         padding: 40,
-        height: "80vh",
-        display: "flex",
-        flexDirection: "column",
-        overflow: "hidden" // Prevent overflow of the card itself
+        boxShadow: "0 10px 30px rgba(0,0,0,0.1)",
+        border: "3px solid black" // Sketch style border
     },
     header: {
+        fontSize: 24,
+        fontWeight: "bold",
+        margin: "0 0 4px 0"
+    },
+    subHeader: {
+        color: "#666",
         marginBottom: 30
     },
-    title: {
-        fontSize: 24,
-        margin: "0 0 8px 0"
-    },
-    address: {
-        fontSize: 14,
-        color: "#666",
-        margin: 0
-    },
-    contentGrid: {
+    grid: {
         display: "grid",
         gridTemplateColumns: "1fr 1fr",
-        gap: 40,
-        flex: 1, // Take remaining space
-        overflow: "hidden"
+        gap: 30
     },
-    leftCol: {
+    calendarCard: {
+        border: "1px solid #ccc",
+        padding: 20,
+        borderRadius: 12
+    },
+    cardTitle: {
+        fontSize: 18,
+        marginBottom: 16
+    },
+    calendarGrid: {
+        display: "grid",
+        gridTemplateColumns: "repeat(7, 1fr)",
+        gap: 6
+    },
+    dayCell: {
+        aspectRatio: "1/1",
         display: "flex",
-        flexDirection: "column",
-        gap: 20
+        justifyContent: "center",
+        alignItems: "center",
+        borderRadius: 4,
+        fontSize: 12,
+        fontWeight: "bold",
+        color: "#333"
     },
     rightCol: {
         display: "flex",
         flexDirection: "column",
-        gap: 20,
-        overflow: "hidden" // Allow list to scroll inside
-    },
-    sectionTitle: {
-        fontSize: 16,
-        fontWeight: "bold",
-        margin: "0 0 10px 0"
+        gap: 20
     },
     statsRow: {
         display: "flex",
         gap: 20
     },
     statBox: {
-        border: "1px solid #ddd",
-        borderRadius: 12,
-        padding: 15,
         flex: 1,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center"
+        border: "1px solid #ccc",
+        borderRadius: 12,
+        padding: 16,
+        textAlign: "center"
+    },
+    statVal: {
+        display: "block",
+        fontSize: 24,
+        fontWeight: "bold"
     },
     statLabel: {
         fontSize: 12,
-        color: "#888",
-        marginBottom: 4
+        color: "#666"
     },
-    statValue: {
-        fontSize: 20,
-        fontWeight: "bold"
-    },
-    listContainer: {
+    listCard: {
         flex: 1,
-        border: "1px solid #ddd",
+        border: "1px solid #ccc",
         borderRadius: 12,
-        padding: 15,
+        padding: 20,
         display: "flex",
         flexDirection: "column",
-        overflow: "hidden"
+        height: 300 // Fixed height for scroll
     },
-    list: {
+    listScroll: {
         flex: 1,
         overflowY: "auto",
         display: "flex",
@@ -231,30 +231,32 @@ const styles: Record<string, React.CSSProperties> = {
         gap: 10
     },
     resItem: {
-        background: "#f9f9f9",
+        border: "1px solid #eee",
+        borderRadius: 8,
         padding: 10,
-        borderRadius: 8
+        background: "#fafafa"
     },
-    resRow: {
+    resHeader: {
         display: "flex",
         justifyContent: "space-between",
-        fontWeight: 600,
+        marginBottom: 4,
         fontSize: 14,
-        marginBottom: 4
+        fontWeight: 600
     },
-    resName: {},
-    resDate: { fontSize: 12, color: "#666" },
-    resDetails: {
-        fontSize: 12,
-        color: "#444"
+    resUser: {},
+    resDate: { fontSize: 12, color: "#888" },
+    resObj: { fontSize: 12, color: "#555" },
+    footer: {
+        marginTop: 30,
+        display: "flex",
     },
     acceptBtn: {
-        marginTop: "auto",
-        padding: "12px",
+        padding: "12px 30px",
         background: "white",
-        border: "1px solid #000",
+        border: "1px solid black",
         borderRadius: 8,
-        cursor: "pointer",
-        fontWeight: "bold"
+        fontSize: 16,
+        fontWeight: 600,
+        cursor: "pointer"
     }
 };
