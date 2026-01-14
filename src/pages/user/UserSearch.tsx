@@ -6,7 +6,7 @@ import "leaflet/dist/leaflet.css";
 
 // Custom Red Pin Icon
 import L from "leaflet";
-import redPin from "../../assets/red_pin.png";
+import redPin from "../../assets/red_pin.jpg";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
 
 let DefaultIcon = L.icon({
