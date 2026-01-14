@@ -119,9 +119,15 @@ export default function OwnerDashboard() {
                                     <div style={styles.cardActions}>
                                         <button
                                             style={styles.editBtn}
-                                            onClick={() => navigate("/dueno/edit-space/" + space.id)}
+                                            onClick={() => navigate(`/dueno/editar-espacio/${space.id}`)}
                                         >
                                             Editar
+                                        </button>
+                                        <button
+                                            style={styles.analyticsBtn}
+                                            onClick={() => navigate(`/dueno/reservas/${space.id}`)}
+                                        >
+                                            Ver reservas
                                         </button>
                                     </div>
                                 </div>

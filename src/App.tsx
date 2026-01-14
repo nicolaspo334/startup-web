@@ -13,6 +13,7 @@ import UserLogin from "./pages/user/UserLogin";
 import UserRegister from "./pages/user/UserRegister";
 import UserSearch from "./pages/user/UserSearch";
 import UserBookSpace from "./pages/user/UserBookSpace";
+import OwnerSpaceAnalytics from "./pages/owner/OwnerSpaceAnalytics";
 
 export default function App() {
   return (
@@ -26,6 +27,7 @@ export default function App() {
       <Route path="/dueno/dashboard" element={<OwnerDashboard />} />
       <Route path="/dueno/add-space" element={<OwnerAddSpace />} />
       <Route path="/dueno/edit-space/:id" element={<OwnerEditSpace />} />
+      <Route path="/dueno/reservas/:id" element={<OwnerSpaceAnalytics />} />
 
       {/* Flujo Usuario */}
       <Route path="/usuario" element={<UserAuth />} />
