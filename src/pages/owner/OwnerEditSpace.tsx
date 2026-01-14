@@ -261,6 +261,8 @@ export default function OwnerEditSpace() {
                                         placeholder="Pequeño"
                                         value={capSmall}
                                         onChange={e => setCapSmall(e.target.value)}
+                                        required
+                                        min="0"
                                     />
                                     <input
                                         style={styles.inputSmall}
@@ -268,6 +270,8 @@ export default function OwnerEditSpace() {
                                         placeholder="Mediano"
                                         value={capMedium}
                                         onChange={e => setCapMedium(e.target.value)}
+                                        required
+                                        min="0"
                                     />
                                     <input
                                         style={styles.inputSmall}
@@ -275,6 +279,8 @@ export default function OwnerEditSpace() {
                                         placeholder="Grande"
                                         value={capLarge}
                                         onChange={e => setCapLarge(e.target.value)}
+                                        required
+                                        min="0"
                                     />
                                 </div>
                             </div>
