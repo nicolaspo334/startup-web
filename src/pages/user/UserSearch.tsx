@@ -4,17 +4,18 @@ import { useNavigate } from "react-router-dom";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 
-// Custom Red Pin Icon
+// Standard Red Marker (Leaflet style)
 import L from "leaflet";
-import redPin from "../../assets/red_pin.jpg";
+import redMarker from "../../assets/marker-icon-red.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
 
 let DefaultIcon = L.icon({
-    iconUrl: redPin,
+    iconUrl: redMarker,
     shadowUrl: iconShadow,
-    iconSize: [40, 40], // Adjusted size for the pin
-    iconAnchor: [20, 40], // Point at bottom center
-    popupAnchor: [0, -40] // Popup opens above the pin
+    iconSize: [25, 41], // Standard size
+    iconAnchor: [12, 41], // Standard anchor
+    popupAnchor: [1, -34], // Standard popup anchor
+    shadowSize: [41, 41]
 });
 L.Marker.prototype.options.icon = DefaultIcon;
 
