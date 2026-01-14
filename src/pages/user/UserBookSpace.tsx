@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 
 interface Space {
     id: string;
@@ -107,9 +107,20 @@ export default function UserBookSpace() {
 
     const availability = getAvailability();
 
-    // Default dates to Today -> Tomorrow
+    // URL Params
+    const [searchParams] = useSearchParams();
+    const queryStart = searchParams.get("start");
+    const queryEnd = searchParams.get("end");
+    const [datesLocked, setDatesLocked] = useState(false);
+
+    // Initial Date Logic
     useEffect(() => {
-        if (!startDate && !endDate) {
+        if (queryStart && queryEnd) {
+            setStartDate(queryStart);
+            setEndDate(queryEnd);
+            setDatesLocked(true);
+        } else if (!startDate && !endDate) {
+            // Default only if no params provided
             const today = new Date();
             const tomorrow = new Date();
             tomorrow.setDate(today.getDate() + 1);
@@ -117,7 +128,7 @@ export default function UserBookSpace() {
             setStartDate(today.toISOString().split('T')[0]);
             setEndDate(tomorrow.toISOString().split('T')[0]);
         }
-    }, [startDate, endDate]);
+    }, [queryStart, queryEnd]);
 
     // Reset quantities if availability drops below selected while changing dates
     useEffect(() => {
@@ -208,6 +219,7 @@ export default function UserBookSpace() {
                                 style={styles.input}
                                 value={startDate}
                                 onChange={e => setStartDate(e.target.value)}
+                                disabled={datesLocked}
                             />
                         </div>
                         <div style={styles.inputGroup}>
@@ -217,6 +229,7 @@ export default function UserBookSpace() {
                                 style={styles.input}
                                 value={endDate}
                                 onChange={e => setEndDate(e.target.value)}
+                                disabled={datesLocked}
                             />
                         </div>
                         <div style={styles.inputGroup}>

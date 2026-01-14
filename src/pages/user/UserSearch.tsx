@@ -108,44 +108,73 @@ export default function UserSearch() {
         }
     };
 
+    const [startDate, setStartDate] = useState("");
+    const [endDate, setEndDate] = useState("");
+
     const handleSearch = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // If empty query, reset to show all spaces
         if (!query.trim()) {
             setFilteredSpaces(allSpaces);
             setRequirements(null);
             return;
         }
 
+        if (!startDate || !endDate) {
+            alert("Por favor selecciona fecha de inicio y fin para buscar disponibilidad real.");
+            return;
+        }
+
+        if (startDate > endDate) {
+            alert("La fecha de fin debe ser posterior a la de inicio");
+            return;
+        }
+
         setLoadingAI(true);
         try {
-            const res = await fetch("/api/classify-items", {
+            // 1. AI Classify
+            const resClassify = await fetch("/api/classify-items", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ query })
             });
+            const reqs = await resClassify.json() as any;
 
-            const reqs = await res.json() as any;
-
-            // Expected: { small: X, medium: Y, large: Z }
             if (reqs) {
                 setRequirements(reqs);
 
-                // Filter logic
-                const filtered = allSpaces.filter(s => {
-                    const enoughSmall = (s.capacity_small || 0) >= (reqs.small || 0);
-                    const enoughMedium = (s.capacity_medium || 0) >= (reqs.medium || 0);
-                    const enoughLarge = (s.capacity_large || 0) >= (reqs.large || 0);
-                    return enoughSmall && enoughMedium && enoughLarge;
+                // 2. Availability Check (Server Side)
+                const resAvail = await fetch("/api/search-availability", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        start_date: startDate,
+                        end_date: endDate,
+                        req_small: reqs.small || 0,
+                        req_medium: reqs.medium || 0,
+                        req_large: reqs.large || 0
+                    })
                 });
 
-                setFilteredSpaces(filtered);
+                const dataAvail = await resAvail.json() as any;
+                if (dataAvail.ok) {
+                    setFilteredSpaces(dataAvail.spaces);
+                } else {
+                    console.error("Availability error", dataAvail.error);
+                    // Fallback to local filter if server fails, though risky
+                    const filtered = allSpaces.filter(s => {
+                        return (
+                            (s.capacity_small || 0) >= reqs.small &&
+                            (s.capacity_medium || 0) >= reqs.medium &&
+                            (s.capacity_large || 0) >= reqs.large
+                        );
+                    });
+                    setFilteredSpaces(filtered);
+                }
             }
-
         } catch (err) {
-            console.error("AI Search error", err);
-            alert("Error al procesar la búsqueda inteligente");
+            console.error("Search error", err);
+            alert("Error en la búsqueda");
         } finally {
             setLoadingAI(false);
         }
@@ -161,17 +190,40 @@ export default function UserSearch() {
                 <form onSubmit={handleSearch} style={styles.searchForm}>
                     <input
                         style={styles.input}
-                        placeholder="ej. Quiero guardar 2 bicis y un sofá..."
+                        placeholder="ej. Quiero guardar 2 bicis..."
                         value={query}
                         onChange={e => setQuery(e.target.value)}
                     />
+
+                    {/* Date Inputs */}
+                    <div style={styles.dateGroup}>
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <label style={{ fontSize: 10, color: '#888' }}>Inicio</label>
+                            <input
+                                type="date"
+                                style={styles.dateInput}
+                                value={startDate}
+                                onChange={e => setStartDate(e.target.value)}
+                            />
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <label style={{ fontSize: 10, color: '#888' }}>Fin</label>
+                            <input
+                                type="date"
+                                style={styles.dateInput}
+                                value={endDate}
+                                onChange={e => setEndDate(e.target.value)}
+                            />
+                        </div>
+                    </div>
+
                     <button type="submit" disabled={loadingAI} style={styles.searchBtn}>
                         {loadingAI ? "..." : "🔍"}
                     </button>
                 </form>
                 {requirements && (
                     <div style={styles.aiBadge}>
-                        Detectado: {requirements.small} Peq, {requirements.medium} Med, {requirements.large} Gran
+                        {requirements.small} Peq, {requirements.medium} Med, {requirements.large} Gran
                     </div>
                 )}
             </div>
@@ -240,7 +292,10 @@ export default function UserSearch() {
                                     <h3 style={{ margin: "8px 0", fontSize: 16 }}>{space.name}</h3>
                                     <p style={{ margin: 0, fontSize: 12, color: "#666" }}>{space.type} • {space.size_m2}m²</p>
                                     <p style={{ margin: "4px 0", fontSize: 12 }}>{space.address}</p>
-                                    <button style={styles.bookBtn} onClick={() => navigate(`/usuario/reservar/${space.id}`)}>
+                                    <button
+                                        style={styles.bookBtn}
+                                        onClick={() => navigate(`/usuario/reservar/${space.id}?start=${startDate}&end=${endDate}`)}
+                                    >
                                         Reservar
                                     </button>
                                 </div>
@@ -284,21 +339,33 @@ const styles: Record<string, React.CSSProperties> = {
     },
     searchForm: {
         pointerEvents: "auto",
-        flex: 1,
         display: "flex",
         boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
         borderRadius: 50,
         background: "white",
         overflow: "hidden",
         padding: "4px",
-        maxWidth: "900px" // Wider search bar
+        alignItems: "center"
+        // removed maxWidth 900
     },
     input: {
-        flex: 1,
+        width: 250, // Reduced width
         border: "none",
         padding: "12px 20px",
         fontSize: 16,
         outline: "none"
+    },
+    dateGroup: {
+        display: "flex",
+        gap: 8,
+        padding: "0 10px",
+        borderLeft: "1px solid #eee"
+    },
+    dateInput: {
+        border: "none",
+        fontSize: 13,
+        outline: "none",
+        fontFamily: "inherit"
     },
     searchBtn: {
         background: "black",
