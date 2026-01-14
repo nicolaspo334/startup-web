@@ -19,6 +19,9 @@ export const onRequestPut: PagesFunction<Env> = async (ctx) => {
             capacity_small,
             capacity_medium,
             capacity_large,
+            price_small,
+            price_medium,
+            price_large,
             image_base64
         } = body;
 
@@ -73,6 +76,7 @@ export const onRequestPut: PagesFunction<Env> = async (ctx) => {
             `UPDATE spaces SET 
              name = ?, address = ?, province = ?, country = ?, type = ?, size_m2 = ?, 
              capacity_small = ?, capacity_medium = ?, capacity_large = ?, 
+             price_small = ?, price_medium = ?, price_large = ?,
              image_base64 = ?, lat = ?, lng = ?
            WHERE id = ? AND owner_id = ?`
         ).bind(
@@ -85,6 +89,9 @@ export const onRequestPut: PagesFunction<Env> = async (ctx) => {
             capacity_small,
             capacity_medium,
             capacity_large,
+            price_small || 0,
+            price_medium || 0,
+            price_large || 0,
             filename,
             lat,
             lng,

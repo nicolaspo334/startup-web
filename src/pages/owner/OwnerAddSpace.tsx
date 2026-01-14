@@ -16,6 +16,9 @@ export default function OwnerAddSpace() {
     const [capSmall, setCapSmall] = useState("");
     const [capMedium, setCapMedium] = useState("");
     const [capLarge, setCapLarge] = useState("");
+    const [priceSmall, setPriceSmall] = useState("");
+    const [priceMedium, setPriceMedium] = useState("");
+    const [priceLarge, setPriceLarge] = useState("");
 
     // Image
     const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -64,6 +67,9 @@ export default function OwnerAddSpace() {
                     capacity_small: parseInt(capSmall) || 0,
                     capacity_medium: parseInt(capMedium) || 0,
                     capacity_large: parseInt(capLarge) || 0,
+                    price_small: parseFloat(priceSmall) || 0,
+                    price_medium: parseFloat(priceMedium) || 0,
+                    price_large: parseFloat(priceLarge) || 0,
                     image_base64: imageBase64
                 }),
             });
@@ -219,6 +225,42 @@ export default function OwnerAddSpace() {
                                         onChange={e => setCapLarge(e.target.value)}
                                         required
                                         min="0"
+                                    />
+                                </div>
+                            </div>
+
+                            <div style={styles.fieldGroup}>
+                                <label style={styles.label}>Precios por día (€)</label>
+                                <div style={styles.capacityRow}>
+                                    <input
+                                        style={styles.inputSmall}
+                                        type="number"
+                                        placeholder="Peq (€)"
+                                        value={priceSmall}
+                                        onChange={e => setPriceSmall(e.target.value)}
+                                        required
+                                        min="0"
+                                        step="0.01"
+                                    />
+                                    <input
+                                        style={styles.inputSmall}
+                                        type="number"
+                                        placeholder="Med (€)"
+                                        value={priceMedium}
+                                        onChange={e => setPriceMedium(e.target.value)}
+                                        required
+                                        min="0"
+                                        step="0.01"
+                                    />
+                                    <input
+                                        style={styles.inputSmall}
+                                        type="number"
+                                        placeholder="Gra (€)"
+                                        value={priceLarge}
+                                        onChange={e => setPriceLarge(e.target.value)}
+                                        required
+                                        min="0"
+                                        step="0.01"
                                     />
                                 </div>
                             </div>
