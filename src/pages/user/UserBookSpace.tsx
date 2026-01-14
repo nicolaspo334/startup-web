@@ -271,13 +271,29 @@ export default function UserBookSpace() {
                         <p style={{ fontSize: 12, color: "#666" }}>Selecciona fechas para ver disponibilidad</p>
                     )}
 
-                    <div style={{ marginBottom: 16, padding: 10, background: "#f9f9f9", borderRadius: 8 }}>
-                        <p style={styles.capLabel}>Capacidad Total del Espacio:</p>
-                        <div style={{ display: "flex", gap: 10, fontSize: 12 }}>
-                            <span style={{ fontWeight: 600 }}>📦 Pequeños: {space.capacity_small || 0}</span>
-                            <span style={{ fontWeight: 600 }}>📦 Medianos: {space.capacity_medium || 0}</span>
-                            <span style={{ fontWeight: 600 }}>📦 Grandes: {space.capacity_large || 0}</span>
-                        </div>
+                    <div style={{ marginBottom: 16, padding: 15, background: "#f5f5f5", borderRadius: 12, border: "1px solid #e0e0e0" }}>
+                        <p style={{ margin: "0 0 10px 0", fontSize: 14, fontWeight: 600, color: "#333" }}>
+                            Resumen de Costos
+                        </p>
+                        {(!startDate || !endDate) ? (
+                            <p style={{ fontSize: 12, color: "#666", margin: 0 }}>Selecciona fechas para calcular el precio.</p>
+                        ) : (
+                            <div>
+                                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 5 }}>
+                                    <span>Objetos seleccionados:</span>
+                                    <span>{qtySmall + qtyMedium + qtyLarge}</span>
+                                </div>
+                                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 5 }}>
+                                    <span>Duración:</span>
+                                    <span>{(new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24) + 1} días</span>
+                                </div>
+                                <div style={{ height: 1, background: "#ccc", margin: "10px 0" }} />
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                    <span style={{ fontWeight: 600 }}>Precio Total:</span>
+                                    <span style={{ fontSize: 18, fontWeight: "bold", color: "black" }}>{totalPrice.toFixed(2)}€</span>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     <div style={styles.capacityRow}>
