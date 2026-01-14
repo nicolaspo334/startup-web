@@ -55,7 +55,7 @@ const styles: Record<string, React.CSSProperties> = {
     textAlign: "center",
   },
   brand: {
-    fontFamily: '"UnifrakturMaguntia", cursive',
+    fontFamily: '"Grenze Gotisch", cursive',
     fontSize: "clamp(56px, 8vw, 96px)",
     fontWeight: 400,
     color: "white",
