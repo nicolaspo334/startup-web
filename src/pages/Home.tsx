@@ -7,7 +7,7 @@ export default function Home() {
       <div style={styles.overlay} />
 
       <div style={styles.content}>
-        <h1 style={styles.brand}>Guardy</h1>
+        <h1 style={styles.brand}>Guardyy</h1>
 
         <div style={styles.buttons}>
           <Link to="/dueno" style={styles.primaryBtn}>
@@ -55,9 +55,9 @@ const styles: Record<string, React.CSSProperties> = {
     textAlign: "center",
   },
   brand: {
-    fontFamily: '"Playfair Display", serif',
+    fontFamily: '"UnifrakturMaguntia", cursive',
     fontSize: "clamp(56px, 8vw, 96px)",
-    fontWeight: 700,
+    fontWeight: 400,
     color: "white",
     margin: 0,
     letterSpacing: 2,
