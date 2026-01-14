@@ -107,6 +107,18 @@ export default function UserBookSpace() {
 
     const availability = getAvailability();
 
+    // Default dates to Today -> Tomorrow
+    useEffect(() => {
+        if (!startDate && !endDate) {
+            const today = new Date();
+            const tomorrow = new Date();
+            tomorrow.setDate(today.getDate() + 1);
+
+            setStartDate(today.toISOString().split('T')[0]);
+            setEndDate(tomorrow.toISOString().split('T')[0]);
+        }
+    }, [startDate, endDate]);
+
     // Reset quantities if availability drops below selected while changing dates
     useEffect(() => {
         if (qtySmall > availability.small) setQtySmall(0);
@@ -225,6 +237,15 @@ export default function UserBookSpace() {
                     {(!startDate || !endDate) && (
                         <p style={{ fontSize: 12, color: "#666" }}>Selecciona fechas para ver disponibilidad</p>
                     )}
+
+                    <div style={{ marginBottom: 16, padding: 10, background: "#f9f9f9", borderRadius: 8 }}>
+                        <p style={styles.capLabel}>Capacidad Total del Espacio:</p>
+                        <div style={{ display: "flex", gap: 10, fontSize: 12 }}>
+                            <span style={{ fontWeight: 600 }}>📦 Pequeños: {space.capacity_small || 0}</span>
+                            <span style={{ fontWeight: 600 }}>📦 Medianos: {space.capacity_medium || 0}</span>
+                            <span style={{ fontWeight: 600 }}>📦 Grandes: {space.capacity_large || 0}</span>
+                        </div>
+                    </div>
 
                     <div style={styles.capacityRow}>
                         <div style={styles.capItem}>
