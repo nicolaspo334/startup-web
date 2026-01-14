@@ -2,6 +2,7 @@
 export const onRequestGet: PagesFunction<{ SPACES_DB: D1Database }> = async (ctx) => {
     const url = new URL(ctx.request.url);
     const id = url.searchParams.get("id");
+    const owner_id = url.searchParams.get("owner_id");
     // If owner_id is provided, check ownership (for Owner Edit page)
     // If not, just return the space (for User Book page) - assuming public spaces
     let query = "SELECT * FROM spaces WHERE id = ?";
