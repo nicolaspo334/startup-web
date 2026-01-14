@@ -20,6 +20,7 @@ export default function UserLogin() {
       const data = await res.json() as any;
 
       if (res.ok) {
+        localStorage.setItem("user_id", data.id); // Save Session Correctly
         navigate("/buscar");
       } else {
         alert("Error: " + (data.error || "Credenciales incorrectas"));
