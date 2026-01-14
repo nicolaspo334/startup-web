@@ -45,6 +45,29 @@ export default function OwnerSpaceAnalytics() {
             .finally(() => setLoading(false));
     }, [id]);
 
+    const handleDelete = async (resId: number) => {
+        if (!confirm("¿Seguro que quieres eliminar esta reserva? Esta acción no se puede deshacer.")) return;
+        const ownerId = localStorage.getItem("owner_id");
+        if (!ownerId) return;
+
+        try {
+            const res = await fetch(`/api/owner-delete-reservation?id=${resId}&owner_id=${ownerId}`, {
+                method: "DELETE"
+            });
+            const data = await res.json() as any;
+
+            if (data.ok) {
+                // Remove from state immediately
+                setReservations(prev => prev.filter(r => r.id !== resId));
+            } else {
+                alert("Error al eliminar: " + data.error);
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Error de conexión");
+        }
+    };
+
     // Calendar Helpers
     const today = new Date();
     const currentMonth = today.getMonth();
@@ -117,6 +140,12 @@ export default function OwnerSpaceAnalytics() {
                                             {r.qty_medium > 0 && `📦 Med: ${r.qty_medium} `}
                                             {r.qty_large > 0 && `📦 Gra: ${r.qty_large}`}
                                         </div>
+                                        <button
+                                            style={styles.deleteBtn}
+                                            onClick={() => handleDelete(r.id)}
+                                        >
+                                            Eliminar
+                                        </button>
                                     </div>
                                 ))}
                             </div>
