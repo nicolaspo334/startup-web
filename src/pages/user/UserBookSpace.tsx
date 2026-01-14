@@ -99,9 +99,9 @@ export default function UserBookSpace() {
         }
 
         return {
-            small: Math.max(0, space.capacity_small - maxUsageSmall),
-            medium: Math.max(0, space.capacity_medium - maxUsageMedium),
-            large: Math.max(0, space.capacity_large - maxUsageLarge)
+            small: Math.max(0, (space.capacity_small || 0) - maxUsageSmall),
+            medium: Math.max(0, (space.capacity_medium || 0) - maxUsageMedium),
+            large: Math.max(0, (space.capacity_large || 0) - maxUsageLarge)
         };
     };
 
@@ -235,7 +235,7 @@ export default function UserBookSpace() {
                                 onChange={e => setQtySmall(Number(e.target.value))}
                                 disabled={!startDate || !endDate}
                             >
-                                {[...Array(availability.small + 1).keys()].map(n => (
+                                {[...Array(Math.floor(availability.small || 0) + 1).keys()].map(n => (
                                     <option key={n} value={n}>{n}</option>
                                 ))}
                             </select>
@@ -249,7 +249,7 @@ export default function UserBookSpace() {
                                 onChange={e => setQtyMedium(Number(e.target.value))}
                                 disabled={!startDate || !endDate}
                             >
-                                {[...Array(availability.medium + 1).keys()].map(n => (
+                                {[...Array(Math.floor(availability.medium || 0) + 1).keys()].map(n => (
                                     <option key={n} value={n}>{n}</option>
                                 ))}
                             </select>
@@ -263,7 +263,7 @@ export default function UserBookSpace() {
                                 onChange={e => setQtyLarge(Number(e.target.value))}
                                 disabled={!startDate || !endDate}
                             >
-                                {[...Array(availability.large + 1).keys()].map(n => (
+                                {[...Array(Math.floor(availability.large || 0) + 1).keys()].map(n => (
                                     <option key={n} value={n}>{n}</option>
                                 ))}
                             </select>
