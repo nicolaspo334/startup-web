@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 interface Space {
     id: string;
@@ -117,18 +117,17 @@ export default function OwnerDashboard() {
                                     </div>
 
                                     <div style={styles.cardActions}>
-                                        <button
-                                            style={styles.editBtn}
-                                            onClick={() => navigate(`/dueno/editar-espacio/${space.id}`)}
-                                        >
-                                            Editar
-                                        </button>
-                                        <button
-                                            style={styles.analyticsBtn}
-                                            onClick={() => navigate(`/dueno/reservas/${space.id}`)}
-                                        >
-                                            Ver reservas
-                                        </button>
+                                        <div style={styles.actions}>
+                                            <Link to={`/dueno/edit-space/${space.id}`} style={styles.editBtn}>
+                                                Editar
+                                            </Link>
+                                            <button
+                                                onClick={() => navigate(`/dueno/analytics/${space.id}`)}
+                                                style={styles.viewBtn} // Blue button style
+                                            >
+                                                Ver Reservas
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             ))}

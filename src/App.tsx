@@ -27,7 +27,7 @@ export default function App() {
       <Route path="/dueno/dashboard" element={<OwnerDashboard />} />
       <Route path="/dueno/add-space" element={<OwnerAddSpace />} />
       <Route path="/dueno/edit-space/:id" element={<OwnerEditSpace />} />
-      <Route path="/dueno/reservas/:id" element={<OwnerSpaceAnalytics />} />
+      <Route path="/dueno/analytics/:id" element={<OwnerSpaceAnalytics />} />
 
       {/* Flujo Usuario */}
       <Route path="/usuario" element={<UserAuth />} />
