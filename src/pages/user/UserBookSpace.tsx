@@ -108,238 +108,236 @@ export default function UserBookSpace() {
         };
     };
 
-};
+    const availability = getAvailability();
 
-const availability = getAvailability();
+    // Calculate Total Price
+    const calculateTotal = () => {
+        if (!space || !startDate || !endDate) return 0;
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const diffTime = Math.abs(end.getTime() - start.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // Inclusive
 
-// Calculate Total Price
-const calculateTotal = () => {
-    if (!space || !startDate || !endDate) return 0;
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const diffTime = Math.abs(end.getTime() - start.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // Inclusive
+        const dailyTotal =
+            (qtySmall * (space.price_small || 0)) +
+            (qtyMedium * (space.price_medium || 0)) +
+            (qtyLarge * (space.price_large || 0));
 
-    const dailyTotal =
-        (qtySmall * (space.price_small || 0)) +
-        (qtyMedium * (space.price_medium || 0)) +
-        (qtyLarge * (space.price_large || 0));
+        return dailyTotal * diffDays;
+    };
+    const totalPrice = calculateTotal();
 
-    return dailyTotal * diffDays;
-};
-const totalPrice = calculateTotal();
+    // URL Params
+    const [searchParams] = useSearchParams();
+    const queryStart = searchParams.get("start");
+    const queryEnd = searchParams.get("end");
+    const [datesLocked, setDatesLocked] = useState(false);
 
-// URL Params
-const [searchParams] = useSearchParams();
-const queryStart = searchParams.get("start");
-const queryEnd = searchParams.get("end");
-const [datesLocked, setDatesLocked] = useState(false);
+    // Initial Date Logic
+    useEffect(() => {
+        if (queryStart && queryEnd) {
+            setStartDate(queryStart);
+            setEndDate(queryEnd);
+            setDatesLocked(true);
+        } else if (!startDate && !endDate) {
+            // Default only if no params provided
+            const today = new Date();
+            const tomorrow = new Date();
+            tomorrow.setDate(today.getDate() + 1);
 
-// Initial Date Logic
-useEffect(() => {
-    if (queryStart && queryEnd) {
-        setStartDate(queryStart);
-        setEndDate(queryEnd);
-        setDatesLocked(true);
-    } else if (!startDate && !endDate) {
-        // Default only if no params provided
-        const today = new Date();
-        const tomorrow = new Date();
-        tomorrow.setDate(today.getDate() + 1);
-
-        setStartDate(today.toISOString().split('T')[0]);
-        setEndDate(tomorrow.toISOString().split('T')[0]);
-    }
-}, [queryStart, queryEnd]);
-
-// Reset quantities if availability drops below selected while changing dates
-useEffect(() => {
-    if (qtySmall > availability.small) setQtySmall(0);
-    if (qtyMedium > availability.medium) setQtyMedium(0);
-    if (qtyLarge > availability.large) setQtyLarge(0);
-}, [startDate, endDate]);
-
-const handleReserve = async () => {
-    if (!space) return;
-    const userId = localStorage.getItem("user_id");
-    if (!userId) {
-        alert("Debes iniciar sesión para reservar");
-        navigate("/usuario");
-        return;
-    }
-
-    if (!startDate || !endDate) {
-        alert("Selecciona las fechas");
-        return;
-    }
-
-    if (qtySmall === 0 && qtyMedium === 0 && qtyLarge === 0) {
-        alert("Selecciona al menos un objeto para guardar");
-        return;
-    }
-
-    setLoading(true);
-    try {
-        const res = await fetch("/api/create-reservation", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                user_id: userId,
-                space_id: space.id,
-                start_date: startDate,
-                end_date: endDate,
-                qty_small: qtySmall,
-                qty_medium: qtyMedium,
-                qty_large: qtyLarge
-            })
-        });
-
-        const data = await res.json() as any;
-        if (data.ok) {
-            alert("¡Reserva realizada con éxito!");
-            navigate("/buscar");
-        } else {
-            alert("Error al reservar: " + data.error);
+            setStartDate(today.toISOString().split('T')[0]);
+            setEndDate(tomorrow.toISOString().split('T')[0]);
         }
-    } catch (err) {
-        console.error(err);
-        alert("Error de conexión");
-    } finally {
-        setLoading(false);
-    }
-};
+    }, [queryStart, queryEnd]);
 
-if (!space) return <div style={{ padding: 40 }}>Cargando espacio...</div>;
+    // Reset quantities if availability drops below selected while changing dates
+    useEffect(() => {
+        if (qtySmall > availability.small) setQtySmall(0);
+        if (qtyMedium > availability.medium) setQtyMedium(0);
+        if (qtyLarge > availability.large) setQtyLarge(0);
+    }, [startDate, endDate]);
 
-const imageUrl = space.image_base64.startsWith("data:")
-    ? space.image_base64
-    : `/api/images/${space.image_base64}`;
+    const handleReserve = async () => {
+        if (!space) return;
+        const userId = localStorage.getItem("user_id");
+        if (!userId) {
+            alert("Debes iniciar sesión para reservar");
+            navigate("/usuario");
+            return;
+        }
 
-return (
-    <div style={styles.container}>
-        <div style={styles.card}>
+        if (!startDate || !endDate) {
+            alert("Selecciona las fechas");
+            return;
+        }
 
-            {/* Left: Image */}
-            <div style={styles.imageSection}>
-                <img src={imageUrl} style={styles.image} alt={space.name} />
-            </div>
+        if (qtySmall === 0 && qtyMedium === 0 && qtyLarge === 0) {
+            alert("Selecciona al menos un objeto para guardar");
+            return;
+        }
 
-            {/* Right: Details & Form */}
-            <div style={styles.detailsSection}>
-                <h1 style={styles.title}>{space.name}</h1>
-                <p style={styles.address}>{space.address}</p>
+        setLoading(true);
+        try {
+            const res = await fetch("/api/create-reservation", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    user_id: userId,
+                    space_id: space.id,
+                    start_date: startDate,
+                    end_date: endDate,
+                    qty_small: qtySmall,
+                    qty_medium: qtyMedium,
+                    qty_large: qtyLarge
+                })
+            });
 
-                <div style={styles.divider} />
+            const data = await res.json() as any;
+            if (data.ok) {
+                alert("¡Reserva realizada con éxito!");
+                navigate("/buscar");
+            } else {
+                alert("Error al reservar: " + data.error);
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Error de conexión");
+        } finally {
+            setLoading(false);
+        }
+    };
 
-                {/* Dates */}
-                <div style={styles.sectionHeader}>Fecha y Hora</div>
-                <div style={styles.row}>
-                    <div style={styles.inputGroup}>
-                        <label style={styles.label}>Desde</label>
-                        <input
-                            type="date"
-                            style={styles.input}
-                            value={startDate}
-                            onChange={e => setStartDate(e.target.value)}
-                            disabled={datesLocked}
-                        />
-                    </div>
-                    <div style={styles.inputGroup}>
-                        <label style={styles.label}>Hasta</label>
-                        <input
-                            type="date"
-                            style={styles.input}
-                            value={endDate}
-                            onChange={e => setEndDate(e.target.value)}
-                            disabled={datesLocked}
-                        />
-                    </div>
-                    <div style={styles.inputGroup}>
-                        <label style={styles.label}>Hora</label>
-                        <input
-                            type="time"
-                            style={styles.input}
-                            value={startTime}
-                            onChange={e => setStartTime(e.target.value)}
-                        />
-                    </div>
+    if (!space) return <div style={{ padding: 40 }}>Cargando espacio...</div>;
+
+    const imageUrl = space.image_base64.startsWith("data:")
+        ? space.image_base64
+        : `/api/images/${space.image_base64}`;
+
+    return (
+        <div style={styles.container}>
+            <div style={styles.card}>
+
+                {/* Left: Image */}
+                <div style={styles.imageSection}>
+                    <img src={imageUrl} style={styles.image} alt={space.name} />
                 </div>
 
-                <div style={styles.divider} />
+                {/* Right: Details & Form */}
+                <div style={styles.detailsSection}>
+                    <h1 style={styles.title}>{space.name}</h1>
+                    <p style={styles.address}>{space.address}</p>
 
-                {/* Capacity */}
-                <div style={styles.sectionHeader}>Objetos a reservar</div>
-                {(!startDate || !endDate) && (
-                    <p style={{ fontSize: 12, color: "#666" }}>Selecciona fechas para ver disponibilidad</p>
-                )}
+                    <div style={styles.divider} />
 
-                <div style={{ marginBottom: 16, padding: 10, background: "#f9f9f9", borderRadius: 8 }}>
-                    <p style={styles.capLabel}>Capacidad Total del Espacio:</p>
-                    <div style={{ display: "flex", gap: 10, fontSize: 12 }}>
-                        <span style={{ fontWeight: 600 }}>📦 Pequeños: {space.capacity_small || 0}</span>
-                        <span style={{ fontWeight: 600 }}>📦 Medianos: {space.capacity_medium || 0}</span>
-                        <span style={{ fontWeight: 600 }}>📦 Grandes: {space.capacity_large || 0}</span>
+                    {/* Dates */}
+                    <div style={styles.sectionHeader}>Fecha y Hora</div>
+                    <div style={styles.row}>
+                        <div style={styles.inputGroup}>
+                            <label style={styles.label}>Desde</label>
+                            <input
+                                type="date"
+                                style={styles.input}
+                                value={startDate}
+                                onChange={e => setStartDate(e.target.value)}
+                                disabled={datesLocked}
+                            />
+                        </div>
+                        <div style={styles.inputGroup}>
+                            <label style={styles.label}>Hasta</label>
+                            <input
+                                type="date"
+                                style={styles.input}
+                                value={endDate}
+                                onChange={e => setEndDate(e.target.value)}
+                                disabled={datesLocked}
+                            />
+                        </div>
+                        <div style={styles.inputGroup}>
+                            <label style={styles.label}>Hora</label>
+                            <input
+                                type="time"
+                                style={styles.input}
+                                value={startTime}
+                                onChange={e => setStartTime(e.target.value)}
+                            />
+                        </div>
                     </div>
+
+                    <div style={styles.divider} />
+
+                    {/* Capacity */}
+                    <div style={styles.sectionHeader}>Objetos a reservar</div>
+                    {(!startDate || !endDate) && (
+                        <p style={{ fontSize: 12, color: "#666" }}>Selecciona fechas para ver disponibilidad</p>
+                    )}
+
+                    <div style={{ marginBottom: 16, padding: 10, background: "#f9f9f9", borderRadius: 8 }}>
+                        <p style={styles.capLabel}>Capacidad Total del Espacio:</p>
+                        <div style={{ display: "flex", gap: 10, fontSize: 12 }}>
+                            <span style={{ fontWeight: 600 }}>📦 Pequeños: {space.capacity_small || 0}</span>
+                            <span style={{ fontWeight: 600 }}>📦 Medianos: {space.capacity_medium || 0}</span>
+                            <span style={{ fontWeight: 600 }}>📦 Grandes: {space.capacity_large || 0}</span>
+                        </div>
+                    </div>
+
+                    <div style={styles.capacityRow}>
+                        <div style={styles.capItem}>
+                            <span style={styles.capLabel}>Pequeños</span>
+                            <select
+                                style={styles.select}
+                                value={qtySmall}
+                                onChange={e => setQtySmall(Number(e.target.value))}
+                                disabled={!startDate || !endDate}
+                            >
+                                {[...Array(Math.floor(availability.small || 0) + 1).keys()].map(n => (
+                                    <option key={n} value={n}>{n}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div style={styles.capItem}>
+                            <span style={styles.capLabel}>Medianos</span>
+                            <select
+                                style={styles.select}
+                                value={qtyMedium}
+                                onChange={e => setQtyMedium(Number(e.target.value))}
+                                disabled={!startDate || !endDate}
+                            >
+                                {[...Array(Math.floor(availability.medium || 0) + 1).keys()].map(n => (
+                                    <option key={n} value={n}>{n}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div style={styles.capItem}>
+                            <span style={styles.capLabel}>Grandes</span>
+                            <select
+                                style={styles.select}
+                                value={qtyLarge}
+                                onChange={e => setQtyLarge(Number(e.target.value))}
+                                disabled={!startDate || !endDate}
+                            >
+                                {[...Array(Math.floor(availability.large || 0) + 1).keys()].map(n => (
+                                    <option key={n} value={n}>{n}</option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style={styles.divider} />
+
+                    {/* Buttons */}
+                    <div style={styles.buttonRow}>
+                        <button style={styles.cancelBtn} onClick={() => navigate(-1)}>Cancelar</button>
+                        <button style={styles.reserveBtn} onClick={handleReserve} disabled={loading}>
+                            {loading ? "Procesando..." : "Reservar"}
+                        </button>
+                    </div>
+
                 </div>
-
-                <div style={styles.capacityRow}>
-                    <div style={styles.capItem}>
-                        <span style={styles.capLabel}>Pequeños</span>
-                        <select
-                            style={styles.select}
-                            value={qtySmall}
-                            onChange={e => setQtySmall(Number(e.target.value))}
-                            disabled={!startDate || !endDate}
-                        >
-                            {[...Array(Math.floor(availability.small || 0) + 1).keys()].map(n => (
-                                <option key={n} value={n}>{n}</option>
-                            ))}
-                        </select>
-                    </div>
-
-                    <div style={styles.capItem}>
-                        <span style={styles.capLabel}>Medianos</span>
-                        <select
-                            style={styles.select}
-                            value={qtyMedium}
-                            onChange={e => setQtyMedium(Number(e.target.value))}
-                            disabled={!startDate || !endDate}
-                        >
-                            {[...Array(Math.floor(availability.medium || 0) + 1).keys()].map(n => (
-                                <option key={n} value={n}>{n}</option>
-                            ))}
-                        </select>
-                    </div>
-
-                    <div style={styles.capItem}>
-                        <span style={styles.capLabel}>Grandes</span>
-                        <select
-                            style={styles.select}
-                            value={qtyLarge}
-                            onChange={e => setQtyLarge(Number(e.target.value))}
-                            disabled={!startDate || !endDate}
-                        >
-                            {[...Array(Math.floor(availability.large || 0) + 1).keys()].map(n => (
-                                <option key={n} value={n}>{n}</option>
-                            ))}
-                        </select>
-                    </div>
-                </div>
-
-                <div style={styles.divider} />
-
-                {/* Buttons */}
-                <div style={styles.buttonRow}>
-                    <button style={styles.cancelBtn} onClick={() => navigate(-1)}>Cancelar</button>
-                    <button style={styles.reserveBtn} onClick={handleReserve} disabled={loading}>
-                        {loading ? "Procesando..." : "Reservar"}
-                    </button>
-                </div>
-
             </div>
         </div>
-    </div>
-);
+    );
 }
 
 const styles: Record<string, React.CSSProperties> = {
