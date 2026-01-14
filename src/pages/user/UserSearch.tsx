@@ -31,31 +31,82 @@ interface Space {
     lng: number;
 }
 
+interface Reservation {
+    id: number;
+    space_name: string;
+    space_address: string;
+    space_id: string;
+    start_date: string;
+    end_date: string;
+    qty_small: number;
+    qty_medium: number;
+    qty_large: number;
+    image_base64: string;
+}
+
 export default function UserSearch() {
-    const navigate = useNavigate(); // Used for Back button
+    const navigate = useNavigate();
     const [query, setQuery] = useState("");
     const [loadingAI, setLoadingAI] = useState(false);
 
-    // All spaces from DB
+    // Data
     const [allSpaces, setAllSpaces] = useState<Space[]>([]);
-    // Filtered spaces to show on map
     const [filteredSpaces, setFilteredSpaces] = useState<Space[]>([]);
+    const [reservations, setReservations] = useState<Reservation[]>([]);
 
     // AI Requirement result
     const [requirements, setRequirements] = useState<{ small: number, medium: number, large: number } | null>(null);
 
+    // Initial Load
     useEffect(() => {
-        // Fetch all spaces on load
+        // Fetch Spaces
         fetch("/api/get-all-spaces")
             .then(res => res.json())
             .then((data: any) => {
                 if (data.ok) {
                     setAllSpaces(data.spaces);
-                    setFilteredSpaces(data.spaces); // Show all initially
+                    setFilteredSpaces(data.spaces);
                 }
             })
             .catch(err => console.error(err));
+
+        loadReservations();
     }, []);
+
+    const loadReservations = () => {
+        const userId = localStorage.getItem("user_id");
+        if (userId) {
+            fetch(`/api/get-user-reservations?user_id=${userId}`)
+                .then(res => res.json())
+                .then((data: any) => {
+                    if (data.ok) setReservations(data.reservations);
+                })
+                .catch(err => console.error("Error fetching reservations", err));
+        }
+    };
+
+    const handleLogout = () => {
+        localStorage.removeItem("user_id");
+        navigate("/usuario/login");
+    };
+
+    const handleDeleteReservation = async (id: number) => {
+        if (!confirm("¿Seguro que quieres eliminar esta reserva?")) return;
+        const userId = localStorage.getItem("user_id");
+        if (!userId) return;
+
+        try {
+            const res = await fetch(`/api/delete-reservation?id=${id}&user_id=${userId}`, { method: "DELETE" });
+            if (res.ok) {
+                loadReservations(); // Refresh list
+            } else {
+                alert("No se pudo eliminar la reserva");
+            }
+        } catch (error) {
+            console.error(error);
+            alert("Error de conexión");
+        }
+    };
 
     const handleSearch = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -102,10 +153,10 @@ export default function UserSearch() {
 
     return (
         <div style={styles.page}>
-            {/* Search Bar Overlay */}
-            <div style={styles.searchContainer}>
-                <button onClick={() => navigate("/usuario")} style={styles.backBtn}>
-                    ←
+            {/* Top Bar Overlay */}
+            <div style={styles.topBar}>
+                <button onClick={handleLogout} style={styles.logoutBtn}>
+                    Cerrar Sesión
                 </button>
                 <form onSubmit={handleSearch} style={styles.searchForm}>
                     <input
@@ -123,6 +174,46 @@ export default function UserSearch() {
                         Detectado: {requirements.small} Peq, {requirements.medium} Med, {requirements.large} Gran
                     </div>
                 )}
+            </div>
+
+            {/* Right Side Panel - My Reservations */}
+            <div style={styles.sidePanel}>
+                <h2 style={styles.panelTitle}>Tus Reservas</h2>
+                <div style={styles.reservationsList}>
+                    {reservations.length === 0 ? (
+                        <p style={{ textAlign: 'center', color: '#666', fontSize: 14 }}>No tienes reservas activas.</p>
+                    ) : (
+                        reservations.map(res => (
+                            <div key={res.id} style={styles.resCard}>
+                                <div style={styles.resHeader}>
+                                    <h3 style={styles.resTitle}>{res.space_name}</h3>
+                                    <span style={styles.resDate}>{res.start_date.split('T')[0]} / {res.end_date.split('T')[0]}</span>
+                                </div>
+                                <p style={styles.resAddress}>{res.space_address}</p>
+                                <div style={styles.resItems}>
+                                    {res.qty_small > 0 && <span>📦 Peq: {res.qty_small}</span>}
+                                    {res.qty_medium > 0 && <span>📦 Med: {res.qty_medium}</span>}
+                                    {res.qty_large > 0 && <span>📦 Gra: {res.qty_large}</span>}
+                                </div>
+                                <div style={styles.resActions}>
+                                    <button
+                                        style={styles.editBtn}
+                                        onClick={() => navigate(`/usuario/reservar/${res.space_id}`)}
+                                        title="Editar (Crear nueva reserva)"
+                                    >
+                                        Editar
+                                    </button>
+                                    <button
+                                        style={styles.deleteBtn}
+                                        onClick={() => handleDeleteReservation(res.id)}
+                                    >
+                                        Eliminar
+                                    </button>
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
             </div>
 
             {/* Map */}
@@ -169,36 +260,38 @@ const styles: Record<string, React.CSSProperties> = {
         height: "100vh",
         overflow: "hidden"
     },
-    searchContainer: {
+    topBar: {
         position: "absolute",
         top: 20,
-        left: "50%",
-        transform: "translateX(-50%)",
+        left: 20,
+        right: 320, // Leave space for side panel
         zIndex: 1000,
-        width: "90%",
-        maxWidth: 750, // Widened from 550
         display: "flex",
         alignItems: "center",
-        gap: 12
+        gap: 12,
+        pointerEvents: "none" // Allow map clicks through empty space
     },
-    backBtn: {
+    logoutBtn: {
+        pointerEvents: "auto",
         background: "white",
-        border: "none",
-        width: 48,
-        height: 48,
-        borderRadius: "50%",
-        fontSize: 24,
+        border: "1px solid #ccc",
+        padding: "10px 16px",
+        borderRadius: 20,
+        fontWeight: 600,
         cursor: "pointer",
-        boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
-        fontWeight: "bold"
+        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+        whiteSpace: "nowrap"
     },
     searchForm: {
+        pointerEvents: "auto",
+        flex: 1,
         display: "flex",
         boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
         borderRadius: 50,
         background: "white",
         overflow: "hidden",
-        padding: "4px"
+        padding: "4px",
+        maxWidth: "900px" // Wider search bar
     },
     input: {
         flex: 1,
@@ -221,13 +314,100 @@ const styles: Record<string, React.CSSProperties> = {
         fontSize: 20
     },
     aiBadge: {
+        pointerEvents: "auto",
         background: "rgba(0,0,0,0.8)",
         color: "white",
-        alignSelf: "center",
         padding: "6px 16px",
         borderRadius: 20,
         fontSize: 12,
         backdropFilter: "blur(5px)"
+    },
+    sidePanel: {
+        position: "absolute",
+        top: 20,
+        right: 20,
+        bottom: 20,
+        width: 300,
+        background: "white",
+        borderRadius: 20,
+        boxShadow: "0 10px 40px rgba(0,0,0,0.2)",
+        zIndex: 1000,
+        display: "flex",
+        flexDirection: "column",
+        padding: 20,
+        overflow: "hidden"
+    },
+    panelTitle: {
+        fontSize: 20,
+        fontWeight: "bold",
+        marginBottom: 16,
+        fontFamily: '"Playfair Display", serif'
+    },
+    reservationsList: {
+        flex: 1,
+        overflowY: "auto",
+        display: "flex",
+        flexDirection: "column",
+        gap: 12
+    },
+    resCard: {
+        border: "1px solid #eee",
+        borderRadius: 12,
+        padding: 12,
+        background: "#f9f9f9"
+    },
+    resHeader: {
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "baseline",
+        marginBottom: 4
+    },
+    resTitle: {
+        fontSize: 14,
+        fontWeight: "bold",
+        margin: 0
+    },
+    resDate: {
+        fontSize: 10,
+        color: "#888"
+    },
+    resAddress: {
+        fontSize: 11,
+        color: "#666",
+        margin: "0 0 8px 0"
+    },
+    resItems: {
+        fontSize: 11,
+        display: "flex",
+        gap: 8,
+        flexWrap: "wrap",
+        marginBottom: 10
+    },
+    resActions: {
+        display: "flex",
+        gap: 8
+    },
+    editBtn: {
+        flex: 1,
+        padding: "6px",
+        borderRadius: 6,
+        border: "1px solid #2196F3",
+        background: "transparent",
+        color: "#2196F3",
+        fontSize: 12,
+        cursor: "pointer",
+        fontWeight: 600
+    },
+    deleteBtn: {
+        flex: 1,
+        padding: "6px",
+        borderRadius: 6,
+        border: "1px solid #F44336",
+        background: "transparent",
+        color: "#F44336",
+        fontSize: 12,
+        cursor: "pointer",
+        fontWeight: 600
     },
     bookBtn: {
         width: "100%",
