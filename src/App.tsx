@@ -12,6 +12,7 @@ import UserAuth from "./pages/user/UserAuth";
 import UserLogin from "./pages/user/UserLogin";
 import UserRegister from "./pages/user/UserRegister";
 import UserSearch from "./pages/user/UserSearch";
+import UserBookSpace from "./pages/user/UserBookSpace";
 
 export default function App() {
   return (
@@ -29,6 +30,7 @@ export default function App() {
       {/* Flujo Usuario */}
       <Route path="/usuario" element={<UserAuth />} />
       <Route path="/buscar" element={<UserSearch />} />
+      <Route path="/usuario/reservar/:id" element={<UserBookSpace />} />
       <Route path="/usuario/login" element={<UserLogin />} />
       <Route path="/usuario/register" element={<UserRegister />} />
     </Routes>

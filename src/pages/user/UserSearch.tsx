@@ -149,7 +149,7 @@ export default function UserSearch() {
                                     <h3 style={{ margin: "8px 0", fontSize: 16 }}>{space.name}</h3>
                                     <p style={{ margin: 0, fontSize: 12, color: "#666" }}>{space.type} • {space.size_m2}m²</p>
                                     <p style={{ margin: "4px 0", fontSize: 12 }}>{space.address}</p>
-                                    <button style={styles.bookBtn} onClick={() => alert("Reserva no disponible en demo")}>
+                                    <button style={styles.bookBtn} onClick={() => navigate(`/usuario/reservar/${space.id}`)}>
                                         Reservar
                                     </button>
                                 </div>
