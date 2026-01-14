@@ -6,13 +6,13 @@ import { useParams, useNavigate } from "react-router-dom";
 const CalendarView = ({ reservations }: { reservations: any[] }) => {
     const today = new Date();
     const [month, setMonth] = useState(today.getMonth());
-    const [year, setYear] = useState(today.getFullYear());
+    const [year] = useState(today.getFullYear());
 
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const firstDay = new Date(year, month, 1).getDay(); // 0 = Sunday
 
     const getDaysArray = () => {
-        const days = [];
+        const days: (number | null)[] = [];
         // Empty slots for days before first day of month
         // Adjust for Monday start if needed, but standard US Sunday start for simplicity or Monday? 
         // Let's do Monday start (Spanish Style)
@@ -43,11 +43,11 @@ const CalendarView = ({ reservations }: { reservations: any[] }) => {
                         style={{
                             padding: 6,
                             borderRadius: 4,
-                            background: d && isReserved(d) ? "#4CAF50" : "transparent",
-                            color: d && isReserved(d) ? "white" : "inherit"
+                            background: (d && isReserved(d)) ? "#4CAF50" : "transparent",
+                            color: (d && isReserved(d)) ? "white" : "inherit"
                         }}
                     >
-                        {d}
+                        {d || ""}
                     </div>
                 ))}
             </div>
