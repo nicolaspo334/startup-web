@@ -4,16 +4,17 @@ import { useNavigate } from "react-router-dom";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 
-// Fix Leaflet Default Icon issue in React
+// Custom Red Pin Icon
 import L from "leaflet";
-import icon from "leaflet/dist/images/marker-icon.png";
+import redPin from "../../assets/red_pin.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
 
 let DefaultIcon = L.icon({
-    iconUrl: icon,
+    iconUrl: redPin,
     shadowUrl: iconShadow,
-    iconSize: [25, 41],
-    iconAnchor: [12, 41]
+    iconSize: [40, 40], // Adjusted size for the pin
+    iconAnchor: [20, 40], // Point at bottom center
+    popupAnchor: [0, -40] // Popup opens above the pin
 });
 L.Marker.prototype.options.icon = DefaultIcon;
 
@@ -274,8 +275,8 @@ export default function UserSearch() {
             {/* Map */}
             <MapContainer center={[40.416775, -3.703790]} zoom={13} style={{ width: "100%", height: "100%" }}>
                 <TileLayer
-                    url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 />
 
                 {filteredSpaces.map(space => {
