@@ -26,6 +26,9 @@ interface Space {
     capacity_small: number;
     capacity_medium: number;
     capacity_large: number;
+    price_small: number;
+    price_medium: number;
+    price_large: number;
     image_base64: string;
     lat: number;
     lng: number;
@@ -292,6 +295,27 @@ export default function UserSearch() {
                                     <h3 style={{ margin: "8px 0", fontSize: 16 }}>{space.name}</h3>
                                     <p style={{ margin: 0, fontSize: 12, color: "#666" }}>{space.type} • {space.size_m2}m²</p>
                                     <p style={{ margin: "4px 0", fontSize: 12 }}>{space.address}</p>
+
+                                    {/* Estimated Price Display */}
+                                    {(requirements && startDate && endDate) && (
+                                        <div style={{ margin: "8px 0", padding: "6px", background: "#f0f0f0", borderRadius: 6 }}>
+                                            <p style={{ margin: 0, fontSize: 11, color: "#555" }}>Est. Total:</p>
+                                            <p style={{ margin: 0, fontSize: 14, fontWeight: "bold" }}>
+                                                {(() => {
+                                                    const start = new Date(startDate);
+                                                    const end = new Date(endDate);
+                                                    const days = Math.max(1, (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24) + 1);
+
+                                                    const totalInfo =
+                                                        (requirements.small * (space.price_small || 0)) +
+                                                        (requirements.medium * (space.price_medium || 0)) +
+                                                        (requirements.large * (space.price_large || 0));
+
+                                                    return (totalInfo * days).toFixed(2) + "€";
+                                                })()}
+                                            </p>
+                                        </div>
+                                    )}
                                     <button
                                         style={styles.bookBtn}
                                         onClick={() => navigate(`/usuario/reservar/${space.id}?start=${startDate}&end=${endDate}`)}
