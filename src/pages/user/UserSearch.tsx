@@ -145,7 +145,7 @@ export default function UserSearch() {
             });
             const reqs = await resClassify.json() as any;
 
-            if (reqs) {
+            if (reqs && !reqs.error) {
                 setRequirements(reqs);
 
                 // 2. Availability Check (Server Side)
