@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
+import BookingModal from "../../components/BookingModal";
 
 // Standard Red Marker (Leaflet style)
 import L from "leaflet";
@@ -61,6 +62,7 @@ export default function UserSearch() {
 
     // AI Requirement result
     const [requirements, setRequirements] = useState<{ small: number, medium: number, large: number } | null>(null);
+    const [selectedSpace, setSelectedSpace] = useState<any | null>(null);
 
     // Initial Load
     useEffect(() => {
@@ -320,7 +322,7 @@ export default function UserSearch() {
                                     )}
                                     <button
                                         style={styles.bookBtn}
-                                        onClick={() => navigate(`/usuario/reservar/${space.id}?start=${startDate}&end=${endDate}`)}
+                                        onClick={() => setSelectedSpace(space)}
                                     >
                                         Reservar
                                     </button>
@@ -330,6 +332,16 @@ export default function UserSearch() {
                     );
                 })}
             </MapContainer>
+
+            {/* Booking Modal Overlay */}
+            {selectedSpace && (
+                <BookingModal
+                    space={selectedSpace}
+                    onClose={() => setSelectedSpace(null)}
+                    initialStartDate={startDate}
+                    initialEndDate={endDate}
+                />
+            )}
         </div>
     );
 }
