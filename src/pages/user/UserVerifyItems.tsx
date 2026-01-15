@@ -124,10 +124,15 @@ export default function UserVerifyItems() {
                 </div>
 
                 <div style={styles.buttonRow}>
-                    <button style={styles.cancelBtn} onClick={() => navigate(-1)}>Atrás</button>
-                    <button style={styles.confirmBtn} onClick={handleSubmit} disabled={loading}>
-                        {loading ? "Enviando..." : "Enviar Solicitud"}
-                    </button>
+                    <p style={{ width: "100%", textAlign: "center", fontSize: 13, color: "#666", marginBottom: 10, fontStyle: "italic" }}>
+                        Una vez el dueño acepte tu reserva se realizara automaticamente.
+                    </p>
+                    <div style={{ display: "flex", gap: 15, width: "100%" }}>
+                        <button style={styles.cancelBtn} onClick={() => navigate(-1)}>Atrás</button>
+                        <button style={styles.confirmBtn} onClick={handleSubmit} disabled={loading}>
+                            {loading ? "Procesando..." : "Reservar"}
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -206,7 +211,8 @@ const styles: Record<string, React.CSSProperties> = {
     },
     buttonRow: {
         display: "flex",
-        gap: 15
+        flexDirection: "column",
+        gap: 5
     },
     cancelBtn: {
         flex: 1,

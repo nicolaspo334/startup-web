@@ -24,7 +24,7 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
         // Overlap Condition: (StartA <= EndB) and (EndA >= StartB)
         const overlapResult = await ctx.env.SPACES_DB.prepare(`
             SELECT * FROM reservations 
-            WHERE start_date <= ? AND end_date >= ?
+            WHERE start_date <= ? AND end_date >= ? AND status != 'rejected'
         `).bind(end_date, start_date).all();
 
         const reservations = overlapResult.results as any[];

@@ -19,7 +19,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
 
         const reservations = await env.SPACES_DB.prepare(`
       SELECT * FROM reservations 
-      WHERE space_id = ? AND end_date >= ?
+      WHERE space_id = ? AND end_date >= ? AND status != 'rejected'
     `).bind(space_id, now).all();
 
         return new Response(JSON.stringify({
