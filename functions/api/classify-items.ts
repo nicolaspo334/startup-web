@@ -44,8 +44,8 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
             { role: "user", content: query }
         ];
 
-        // Call Workers AI
-        const response = await ctx.env.AI.run('@cf/meta/llama-3-8b-instruct', {
+        // Call Workers AI (Using Google Gemma)
+        const response = await ctx.env.AI.run('@cf/google/gemma-7b-it', {
             messages
         });
 
