@@ -29,19 +29,39 @@ interface BookingModalProps {
     onClose: () => void;
     initialStartDate?: string;
     initialEndDate?: string;
+    initialQtySmall?: number;
+    initialQtyMedium?: number;
+    initialQtyLarge?: number;
+    onSuccess?: () => void;
 }
 
-export default function BookingModal({ space, onClose, initialStartDate, initialEndDate }: BookingModalProps) {
+export default function BookingModal({
+    space,
+    onClose,
+    initialStartDate,
+    initialEndDate,
+    initialQtySmall = 0,
+    initialQtyMedium = 0,
+    initialQtyLarge = 0,
+    onSuccess
+}: BookingModalProps) {
     const navigate = useNavigate();
     const [reservations, setReservations] = useState<Reservation[]>([]);
 
-    // Form State
+    // UI State
+    const [step, setStep] = useState(1); // 1: Details, 2: Verification
+    const [isClosing, setIsClosing] = useState(false);
+    const [loading, setLoading] = useState(false);
+
+    // Form State (Step 1)
     const [startDate, setStartDate] = useState(initialStartDate || "");
     const [endDate, setEndDate] = useState(initialEndDate || "");
-    const [qtySmall, setQtySmall] = useState(0);
-    const [qtyMedium, setQtyMedium] = useState(0);
-    const [qtyLarge, setQtyLarge] = useState(0);
-    const [isClosing, setIsClosing] = useState(false);
+    const [qtySmall, setQtySmall] = useState(initialQtySmall);
+    const [qtyMedium, setQtyMedium] = useState(initialQtyMedium);
+    const [qtyLarge, setQtyLarge] = useState(initialQtyLarge);
+
+    // Verification State (Step 2)
+    const [items, setItems] = useState<{ type: string, index: number, file: File | null, preview: string }[]>([]);
 
     useEffect(() => {
         // Fetch Existing Reservations for availability calculation
@@ -55,6 +75,7 @@ export default function BookingModal({ space, onClose, initialStartDate, initial
 
     // Calculate dynamic availability
     const getAvailability = () => {
+        // ... (Using same logic as before, just ensuring it calculates correctly)
         if (!startDate || !endDate) return { small: 0, medium: 0, large: 0 };
         if (startDate > endDate) return { small: 0, medium: 0, large: 0 };
 
@@ -118,14 +139,19 @@ export default function BookingModal({ space, onClose, initialStartDate, initial
     };
     const totalPrice = calculateTotal();
 
-    // Reset quantities if availability drops
+    // Reset quantities if availability drops, but only if user interacts (to avoid resetting on initial load if tight)
+    // Actually for editing we might need to be careful, but simplified for now:
     useEffect(() => {
-        if (qtySmall > availability.small) setQtySmall(0);
-        if (qtyMedium > availability.medium) setQtyMedium(0);
-        if (qtyLarge > availability.large) setQtyLarge(0);
-    }, [startDate, endDate]);
+        if (startDate && endDate) {
+            // Only clamp if we are successfully calculating availability
+            if (qtySmall > availability.small) setQtySmall(availability.small);
+            if (qtyMedium > availability.medium) setQtyMedium(availability.medium);
+            if (qtyLarge > availability.large) setQtyLarge(availability.large);
+        }
+    }, [startDate, endDate, availability.small, availability.medium, availability.large]);
 
-    const handleReserve = () => {
+    // Step 1 -> Step 2
+    const handleNext = () => {
         const userId = localStorage.getItem("user_id");
         if (!userId) {
             alert("Debes iniciar sesión para reservar");
@@ -143,24 +169,85 @@ export default function BookingModal({ space, onClose, initialStartDate, initial
             return;
         }
 
-        // Navigate to Verify Items (could also be modaled, but keeping navigation for now)
-        navigate("/usuario/verificar-objetos", {
-            state: {
-                user_id: userId,
-                space_id: space.id,
-                space_name: space.name,
-                start_date: startDate,
-                end_date: endDate,
-                qty_small: qtySmall,
-                qty_medium: qtyMedium,
-                qty_large: qtyLarge
+        // Prepare items for verification
+        const newItems = [];
+        for (let i = 0; i < qtySmall; i++) newItems.push({ type: "Pequeño", index: i + 1, file: null, preview: "" });
+        for (let i = 0; i < qtyMedium; i++) newItems.push({ type: "Mediano", index: i + 1, file: null, preview: "" });
+        for (let i = 0; i < qtyLarge; i++) newItems.push({ type: "Grande", index: i + 1, file: null, preview: "" });
+
+        setItems(newItems);
+        setStep(2);
+    };
+
+    // Step 2 Logic (Image Upload)
+    const handleFileChange = (index: number, file: File | null) => {
+        const updated = [...items];
+        updated[index].file = file;
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                updated[index].preview = reader.result as string;
+                setItems([...updated]);
+            };
+            reader.readAsDataURL(file);
+        } else {
+            updated[index].preview = "";
+            setItems(updated);
+        }
+    };
+
+    const handleBack = () => {
+        setStep(1);
+    };
+
+    const handleSubmit = async () => {
+        const userId = localStorage.getItem("user_id");
+        if (!userId) return;
+
+        if (items.some(i => !i.file)) {
+            alert("Por favor, sube una foto para cada objeto.");
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const itemPhotos = items.map(i => i.preview);
+
+            const res = await fetch("/api/create-reservation", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    user_id: userId,
+                    space_id: space.id,
+                    start_date: startDate,
+                    end_date: endDate,
+                    qty_small: qtySmall,
+                    qty_medium: qtyMedium,
+                    qty_large: qtyLarge,
+                    item_photos: itemPhotos,
+                    status: "pending"
+                })
+            });
+
+            const data = await res.json() as any;
+            if (data.ok) {
+                alert("¡Solicitud enviada! El dueño revisará tus objetos.");
+                if (onSuccess) onSuccess();
+                handleClose();
+            } else {
+                alert("Error: " + data.error);
             }
-        });
+        } catch (err) {
+            console.error(err);
+            alert("Error de conexión");
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleClose = () => {
         setIsClosing(true);
-        setTimeout(onClose, 300); // Wait for animation
+        setTimeout(onClose, 300);
     };
 
     const imageUrl = space.image_base64 && space.image_base64.startsWith("data:")
@@ -169,7 +256,6 @@ export default function BookingModal({ space, onClose, initialStartDate, initial
 
     return (
         <div style={styles.overlay}>
-            {/* Backdrop */}
             <div
                 style={{ ...styles.backdrop, opacity: isClosing ? 0 : 1 }}
                 onClick={handleClose}
@@ -179,7 +265,7 @@ export default function BookingModal({ space, onClose, initialStartDate, initial
                 <div
                     style={{ ...styles.card, animation: isClosing ? 'scaleOut 0.3s forwards' : 'expandFromCenter 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards' }}
                 >
-                    {/* Left: Image */}
+                    {/* Left: Image (Only visible in Step 1 or generic) -- Let's keep it constant */}
                     <div style={styles.imageSection}>
                         {imageUrl ? (
                             <img src={imageUrl} style={styles.image} alt={space.name} />
@@ -189,105 +275,141 @@ export default function BookingModal({ space, onClose, initialStartDate, initial
                         <button style={styles.closeBtn} onClick={handleClose}>×</button>
                     </div>
 
-                    {/* Right: Details & Form */}
+                    {/* Right: Content */}
                     <div style={styles.detailsSection}>
-                        <h1 style={styles.title}>{space.name}</h1>
-                        <p style={styles.address}>{space.address}</p>
+                        {step === 1 ? (
+                            <>
+                                <h1 style={styles.title}>{space.name}</h1>
+                                <p style={styles.address}>{space.address}</p>
 
-                        <div style={styles.divider} />
+                                <div style={styles.divider} />
 
-                        {/* Dates */}
-                        <div style={styles.sectionHeader}>Fecha y Hora</div>
-                        <div style={styles.row}>
-                            <div style={styles.inputGroup}>
-                                <label style={styles.label}>Desde</label>
-                                <input
-                                    type="date"
-                                    style={styles.input}
-                                    value={startDate}
-                                    onChange={e => setStartDate(e.target.value)}
-                                />
-                            </div>
-                            <div style={styles.inputGroup}>
-                                <label style={styles.label}>Hasta</label>
-                                <input
-                                    type="date"
-                                    style={styles.input}
-                                    value={endDate}
-                                    onChange={e => setEndDate(e.target.value)}
-                                />
-                            </div>
-                        </div>
+                                {/* Dates */}
+                                <div style={styles.sectionHeader}>Fecha y Hora</div>
+                                <div style={styles.row}>
+                                    <div style={styles.inputGroup}>
+                                        <label style={styles.label}>Desde</label>
+                                        <input
+                                            type="date"
+                                            style={styles.input}
+                                            value={startDate}
+                                            onChange={e => setStartDate(e.target.value)}
+                                        />
+                                    </div>
+                                    <div style={styles.inputGroup}>
+                                        <label style={styles.label}>Hasta</label>
+                                        <input
+                                            type="date"
+                                            style={styles.input}
+                                            value={endDate}
+                                            onChange={e => setEndDate(e.target.value)}
+                                        />
+                                    </div>
+                                </div>
 
-                        <div style={styles.divider} />
+                                <div style={styles.divider} />
 
-                        {/* Capacity */}
-                        <div style={styles.sectionHeader}>Objetos a reservar</div>
-                        {(!startDate || !endDate) && (
-                            <p style={{ fontSize: 12, color: "#666" }}>Selecciona fechas para ver disponibilidad</p>
+                                {/* Capacity */}
+                                <div style={styles.sectionHeader}>Objetos a reservar</div>
+                                {(!startDate || !endDate) && (
+                                    <p style={{ fontSize: 12, color: "#666" }}>Selecciona fechas para ver disponibilidad</p>
+                                )}
+
+                                <div style={styles.summaryBox}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <span style={{ fontWeight: 600 }}>Total:</span>
+                                        <span style={{ fontSize: 18, fontWeight: "bold" }}>{totalPrice.toFixed(2)}€</span>
+                                    </div>
+                                </div>
+
+                                <div style={styles.capacityRow}>
+                                    <div style={styles.capItem}>
+                                        <span style={styles.capLabel}>Pequeños</span>
+                                        <select
+                                            style={styles.select}
+                                            value={qtySmall}
+                                            onChange={e => setQtySmall(Number(e.target.value))}
+                                            disabled={!startDate || !endDate}
+                                        >
+                                            {[...Array(Math.floor(availability.small || 0) + 1).keys()].map(n => (
+                                                <option key={n} value={n}>{n}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div style={styles.capItem}>
+                                        <span style={styles.capLabel}>Medianos</span>
+                                        <select
+                                            style={styles.select}
+                                            value={qtyMedium}
+                                            onChange={e => setQtyMedium(Number(e.target.value))}
+                                            disabled={!startDate || !endDate}
+                                        >
+                                            {[...Array(Math.floor(availability.medium || 0) + 1).keys()].map(n => (
+                                                <option key={n} value={n}>{n}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div style={styles.capItem}>
+                                        <span style={styles.capLabel}>Grandes</span>
+                                        <select
+                                            style={styles.select}
+                                            value={qtyLarge}
+                                            onChange={e => setQtyLarge(Number(e.target.value))}
+                                            disabled={!startDate || !endDate}
+                                        >
+                                            {[...Array(Math.floor(availability.large || 0) + 1).keys()].map(n => (
+                                                <option key={n} value={n}>{n}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div style={styles.divider} />
+
+                                <div style={styles.warningBox}>
+                                    ⚠️ Antes de realizar tu reserva deberás enviar fotos para aprobación.
+                                </div>
+
+                                <div style={styles.buttonRow}>
+                                    <button style={styles.cancelBtn} className="btn-secondary" onClick={handleClose}>Cancelar</button>
+                                    <button style={styles.reserveBtn} className="btn-primary" onClick={handleNext}>
+                                        Continuar
+                                    </button>
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                <h1 style={styles.title}>Verificación de Objetos</h1>
+                                <p style={styles.address}>Sube una foto clara de cada objeto para continuar.</p>
+                                <div style={styles.divider} />
+
+                                <div style={{ flex: 1, overflowY: 'auto', marginBottom: 20 }}>
+                                    {items.map((item, idx) => (
+                                        <div key={idx} style={styles.itemRow}>
+                                            <div style={{ flex: 1 }}>
+                                                <span style={{ fontWeight: 600, fontSize: 14 }}>Objeto {item.type} #{item.index}</span>
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    onChange={(e) => handleFileChange(idx, e.target.files?.[0] || null)}
+                                                    style={{ display: 'block', marginTop: 8, fontSize: 12 }}
+                                                />
+                                            </div>
+                                            {item.preview && (
+                                                <img src={item.preview} alt="Preview" style={{ width: 50, height: 50, borderRadius: 6, objectFit: "cover", marginLeft: 10 }} />
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <div style={styles.buttonRow}>
+                                    <button style={styles.cancelBtn} className="btn-secondary" onClick={handleBack}>Atrás</button>
+                                    <button style={styles.reserveBtn} className="btn-primary" onClick={handleSubmit} disabled={loading}>
+                                        {loading ? "Enviando..." : "Confirmar Reserva"}
+                                    </button>
+                                </div>
+                            </>
                         )}
-
-                        <div style={styles.summaryBox}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <span style={{ fontWeight: 600 }}>Total:</span>
-                                <span style={{ fontSize: 18, fontWeight: "bold" }}>{totalPrice.toFixed(2)}€</span>
-                            </div>
-                        </div>
-
-                        <div style={styles.capacityRow}>
-                            <div style={styles.capItem}>
-                                <span style={styles.capLabel}>Pequeños</span>
-                                <select
-                                    style={styles.select}
-                                    value={qtySmall}
-                                    onChange={e => setQtySmall(Number(e.target.value))}
-                                    disabled={!startDate || !endDate}
-                                >
-                                    {[...Array(Math.floor(availability.small || 0) + 1).keys()].map(n => (
-                                        <option key={n} value={n}>{n}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div style={styles.capItem}>
-                                <span style={styles.capLabel}>Medianos</span>
-                                <select
-                                    style={styles.select}
-                                    value={qtyMedium}
-                                    onChange={e => setQtyMedium(Number(e.target.value))}
-                                    disabled={!startDate || !endDate}
-                                >
-                                    {[...Array(Math.floor(availability.medium || 0) + 1).keys()].map(n => (
-                                        <option key={n} value={n}>{n}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div style={styles.capItem}>
-                                <span style={styles.capLabel}>Grandes</span>
-                                <select
-                                    style={styles.select}
-                                    value={qtyLarge}
-                                    onChange={e => setQtyLarge(Number(e.target.value))}
-                                    disabled={!startDate || !endDate}
-                                >
-                                    {[...Array(Math.floor(availability.large || 0) + 1).keys()].map(n => (
-                                        <option key={n} value={n}>{n}</option>
-                                    ))}
-                                </select>
-                            </div>
-                        </div>
-
-                        <div style={styles.divider} />
-
-                        <div style={styles.warningBox}>
-                            ⚠️ Antes de realizar tu reserva deberás enviar fotos para aprobación.
-                        </div>
-
-                        <div style={styles.buttonRow}>
-                            <button style={styles.cancelBtn} className="btn-secondary" onClick={handleClose}>Cancelar</button>
-                            <button style={styles.reserveBtn} className="btn-primary" onClick={handleReserve}>
-                                Continuar
-                            </button>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -324,13 +446,13 @@ const styles: Record<string, React.CSSProperties> = {
         display: 'flex',
         overflow: 'hidden',
         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-        transformOrigin: 'center center' // Expand from center
+        transformOrigin: 'center center'
     },
     imageSection: {
         flex: 1,
         background: '#eee',
         position: 'relative',
-        display: 'none', // Hide on mobile defaults? Let's keep flex logic
+        display: 'none', // Can use JS to show on large screens if desired, keeping simple logic
     },
     image: { width: '100%', height: '100%', objectFit: 'cover' },
     placeholderImg: { display: 'flex', width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center', color: '#888' },
@@ -367,7 +489,16 @@ const styles: Record<string, React.CSSProperties> = {
     warningBox: { fontSize: 12, color: '#856404', background: '#fff3cd', padding: 10, borderRadius: 6, marginBottom: 15, borderLeft: '3px solid #ffeeba' },
     buttonRow: { marginTop: 'auto', display: 'flex', gap: 10 },
     cancelBtn: { flex: 1, padding: '10px', borderRadius: 8, background: 'transparent', border: '1px solid #ccc', cursor: 'pointer' },
-    reserveBtn: { flex: 1, padding: '10px', borderRadius: 8, background: 'black', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 600 }
+    reserveBtn: { flex: 1, padding: '10px', borderRadius: 8, background: 'black', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 600 },
+    itemRow: {
+        display: 'flex',
+        alignItems: 'center',
+        background: '#f9f9f9',
+        padding: 10,
+        borderRadius: 8,
+        marginBottom: 8,
+        border: '1px solid #eee'
+    }
 };
 
 // Add responsive logic via media queries or JS if needed, but flex handles basics.

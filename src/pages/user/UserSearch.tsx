@@ -62,7 +62,9 @@ export default function UserSearch() {
 
     // AI Requirement result
     const [requirements, setRequirements] = useState<{ small: number, medium: number, large: number } | null>(null);
+
     const [selectedSpace, setSelectedSpace] = useState<any | null>(null);
+    const [modalInitialState, setModalInitialState] = useState<{ start: string, end: string, qs: number, qm: number, ql: number } | null>(null);
 
     // Initial Load
     useEffect(() => {
@@ -257,8 +259,20 @@ export default function UserSearch() {
                                 <div style={styles.resActions}>
                                     <button
                                         style={styles.editBtn}
-                                        onClick={() => navigate(`/usuario/reservar/${res.space_id}`)}
-                                        title="Editar (Crear nueva reserva)"
+                                        onClick={() => {
+                                            const space = allSpaces.find(s => s.id === res.space_id);
+                                            if (space) {
+                                                setModalInitialState({
+                                                    start: res.start_date.split('T')[0],
+                                                    end: res.end_date.split('T')[0],
+                                                    qs: res.qty_small,
+                                                    qm: res.qty_medium,
+                                                    ql: res.qty_large
+                                                });
+                                                setSelectedSpace(space);
+                                            }
+                                        }}
+                                        title="Editar (Modificar reserva)"
                                     >
                                         Editar
                                     </button>
@@ -322,7 +336,10 @@ export default function UserSearch() {
                                     )}
                                     <button
                                         style={styles.bookBtn}
-                                        onClick={() => setSelectedSpace(space)}
+                                        onClick={() => {
+                                            setModalInitialState(null); // Reset for fresh booking
+                                            setSelectedSpace(space);
+                                        }}
                                     >
                                         Reservar
                                     </button>
@@ -338,8 +355,12 @@ export default function UserSearch() {
                 <BookingModal
                     space={selectedSpace}
                     onClose={() => setSelectedSpace(null)}
-                    initialStartDate={startDate}
-                    initialEndDate={endDate}
+                    initialStartDate={modalInitialState ? modalInitialState.start : startDate}
+                    initialEndDate={modalInitialState ? modalInitialState.end : endDate}
+                    initialQtySmall={modalInitialState?.qs || 0}
+                    initialQtyMedium={modalInitialState?.qm || 0}
+                    initialQtyLarge={modalInitialState?.ql || 0}
+                    onSuccess={loadReservations}
                 />
             )}
         </div>
