@@ -199,7 +199,7 @@ export default function UserBookSpace() {
 
     return (
         <div style={styles.container}>
-            <div style={styles.card}>
+            <div style={styles.card} className="animate-scaleIn">
 
                 {/* Left: Image */}
                 <div style={styles.imageSection}>
@@ -334,8 +334,8 @@ export default function UserBookSpace() {
                     </div>
 
                     <div style={styles.buttonRow}>
-                        <button style={styles.cancelBtn} onClick={() => navigate(-1)}>Cancelar</button>
-                        <button style={styles.reserveBtn} onClick={handleReserve}>
+                        <button style={styles.cancelBtn} className="btn-secondary" onClick={() => navigate(-1)}>Cancelar</button>
+                        <button style={styles.reserveBtn} className="btn-primary" onClick={handleReserve}>
                             Continuar
                         </button>
                     </div>

@@ -25,3 +25,52 @@ body {
   padding: 0;
   margin: 0;
 }
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* Utility Animations */
+.animate-fadeIn { animation: fadeIn 0.4s ease-out forwards; }
+.animate-slideUp { animation: slideUp 0.5s ease-out forwards; }
+.animate-scaleIn { animation: scaleIn 0.4s ease-out forwards; }
+
+/* Modern Button Classes */
+.btn-primary {
+  transition: all 0.2s ease;
+}
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-secondary {
+  transition: all 0.2s ease;
+}
+.btn-secondary:hover {
+  background: rgba(0,0,0,0.05) !important;
+}
+
+/* Card Hover */
+.hover-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.hover-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 30px rgba(0,0,0,0.15) !important;
+}

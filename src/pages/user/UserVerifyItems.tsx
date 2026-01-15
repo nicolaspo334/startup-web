@@ -97,7 +97,7 @@ export default function UserVerifyItems() {
 
     return (
         <div style={styles.container}>
-            <div style={styles.card}>
+            <div style={styles.card} className="animate-slideUp">
                 <h1 style={styles.title}>Verificación de Objetos</h1>
                 <p style={styles.subtitle}>
                     Reserva en: <strong>{state.space_name}</strong><br />
@@ -128,8 +128,8 @@ export default function UserVerifyItems() {
                         Una vez el dueño acepte tu reserva se realizara automaticamente.
                     </p>
                     <div style={{ display: "flex", gap: 15, width: "100%" }}>
-                        <button style={styles.cancelBtn} onClick={() => navigate(-1)}>Atrás</button>
-                        <button style={styles.confirmBtn} onClick={handleSubmit} disabled={loading}>
+                        <button style={styles.cancelBtn} className="btn-secondary" onClick={() => navigate(-1)}>Atrás</button>
+                        <button style={styles.confirmBtn} className="btn-primary" onClick={handleSubmit} disabled={loading}>
                             {loading ? "Procesando..." : "Reservar"}
                         </button>
                     </div>
