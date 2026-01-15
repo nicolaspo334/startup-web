@@ -15,6 +15,7 @@ import UserSearch from "./pages/user/UserSearch";
 import UserBookSpace from "./pages/user/UserBookSpace";
 import UserVerifyItems from "./pages/user/UserVerifyItems";
 import OwnerSpaceAnalytics from "./pages/owner/OwnerSpaceAnalytics";
+import OwnerReviewReservation from "./pages/owner/OwnerReviewReservation";
 
 export default function App() {
   return (
@@ -29,6 +30,7 @@ export default function App() {
       <Route path="/dueno/add-space" element={<OwnerAddSpace />} />
       <Route path="/dueno/edit-space/:id" element={<OwnerEditSpace />} />
       <Route path="/dueno/analytics/:id" element={<OwnerSpaceAnalytics />} />
+      <Route path="/dueno/revisar" element={<OwnerReviewReservation />} />
 
       {/* Flujo Usuario */}
       <Route path="/usuario" element={<UserAuth />} />

@@ -14,6 +14,7 @@ interface Space {
     capacity_large: number;
     allowed_items: string;
     image_base64: string;
+    pending_count?: number;
 }
 
 export default function OwnerDashboard() {
@@ -88,6 +89,11 @@ export default function OwnerDashboard() {
                                 <div key={space.id} style={styles.spaceCard}>
                                     {/* Image placeholder or real image logic */}
                                     <div style={styles.imageContainer}>
+                                        {space.pending_count ? (
+                                            <div style={styles.notificationBadge}>
+                                                {space.pending_count} solicitudes
+                                            </div>
+                                        ) : null}
                                         {space.image_base64 ? (
                                             <img
                                                 src={
@@ -266,7 +272,21 @@ const styles: Record<string, React.CSSProperties> = {
         background: "#ddd",
         display: "flex",
         justifyContent: "center",
-        alignItems: "center"
+        alignItems: "center",
+        position: "relative"
+    },
+    notificationBadge: {
+        position: "absolute",
+        top: 10,
+        right: 10,
+        background: "#ff4444",
+        color: "white",
+        padding: "4px 8px",
+        borderRadius: 12,
+        fontSize: 12,
+        fontWeight: "bold",
+        boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+        zIndex: 10
     },
     spaceImg: {
         width: "100%",

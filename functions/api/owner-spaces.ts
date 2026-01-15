@@ -9,7 +9,13 @@ export const onRequestGet: PagesFunction<{ SPACES_DB: D1Database }> = async (ctx
 
     try {
         const { results } = await ctx.env.SPACES_DB
-            .prepare("SELECT * FROM spaces WHERE owner_id = ? ORDER BY created_at DESC")
+            .prepare(`
+                SELECT s.*, 
+                (SELECT COUNT(*) FROM reservations r WHERE r.space_id = s.id AND r.status = 'pending') as pending_count 
+                FROM spaces s 
+                WHERE s.owner_id = ? 
+                ORDER BY s.created_at DESC
+            `)
             .bind(ownerId)
             .all();
 

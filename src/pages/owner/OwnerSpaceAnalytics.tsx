@@ -11,6 +11,8 @@ interface Reservation {
     qty_small: number;
     qty_medium: number;
     qty_large: number;
+    status: string;
+    item_photos: string; // JSON string
 }
 
 interface Space {
@@ -140,12 +142,35 @@ export default function OwnerSpaceAnalytics() {
                                             {r.qty_medium > 0 && `📦 Med: ${r.qty_medium} `}
                                             {r.qty_large > 0 && `📦 Gra: ${r.qty_large}`}
                                         </div>
-                                        <button
-                                            style={styles.deleteBtn}
-                                            onClick={() => handleDelete(r.id)}
-                                        >
-                                            Eliminar
-                                        </button>
+
+                                        {/* Status Badge */}
+                                        <div style={{ marginTop: 5, marginBottom: 5 }}>
+                                            <span style={{
+                                                fontSize: 11, padding: "2px 6px", borderRadius: 4, fontWeight: "bold",
+                                                background: r.status === 'pending' ? '#fff3cd' : r.status === 'approved' ? '#d4edda' : '#f8d7da',
+                                                color: r.status === 'pending' ? '#856404' : r.status === 'approved' ? '#155724' : '#721c24'
+                                            }}>
+                                                {r.status === 'pending' ? 'Pendiente' : r.status === 'approved' ? 'Aprobada' : 'Rechazada'}
+                                            </span>
+                                        </div>
+
+                                        <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
+                                            {r.status === 'pending' && (
+                                                <button
+                                                    style={styles.reviewBtn}
+                                                    onClick={() => navigate("/dueno/revisar", { state: { reservation: r } })}
+                                                >
+                                                    Revisar Fotos
+                                                </button>
+                                            )}
+                                            <button
+                                                style={styles.deleteBtn}
+                                                onClick={() => handleDelete(r.id)}
+                                            >
+                                                Eliminar
+                                            </button>
+
+                                        </div>
                                     </div>
                                 ))}
                             </div>
@@ -286,6 +311,27 @@ const styles: Record<string, React.CSSProperties> = {
         borderRadius: 8,
         fontSize: 16,
         fontWeight: 600,
+        cursor: "pointer"
+    },
+    reviewBtn: {
+        flex: 1,
+        padding: "6px 10px",
+        background: "#007bff",
+        color: "white",
+        border: "none",
+        borderRadius: 6,
+        fontSize: 13,
+        cursor: "pointer",
+        fontWeight: "bold"
+    },
+    deleteBtn: {
+        flex: 1,
+        padding: "6px 10px",
+        background: "#dc3545",
+        color: "white",
+        border: "none",
+        borderRadius: 6,
+        fontSize: 13,
         cursor: "pointer"
     }
 };
