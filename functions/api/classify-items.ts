@@ -12,27 +12,31 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
 
         // System prompt to guide the AI
         const prompt = `
-          You are a strict JSON data extractor.
-          Your ONLY job is to extract item counts from the user's text and return them as a valid JSON object.
+          You are a strict logistics assistant for a storage app.
+          Analyze the user's input string, which describes items to store. It may be a full sentence ("I want to store a piano") or just a list ("1 piano").
           
-          CATEGORIES:
-          - "small": Boxes, suitcases, bags, toys, lamps, kitchen items, books.
-          - "medium": Chairs, bikes, tables, TVs, microwaves, shelving units.
-          - "large": Sofas, beds, wardrobes, pianos, fridges, washing machines, cars, motorcycles.
-
           RULES:
-          1. Output MUST be valid JSON.
-          2. Keys must be exactly: "small", "medium", "large".
-          3. Values must be Integers.
-          4. DO NOT write any text outside the JSON object.
-          5. DO NOT use markdown code blocks.
+          1. Categorize EACH item into "small", "medium", or "large".
+             - SMALL: Boxes, suitcases, bags, toys, lamps, kitchen items (cups, plates), books, small electronics.
+             - MEDIUM: Chairs, bikes, tables, TVs, microwaves, shelving units.
+             - LARGE: Sofas, beds, wardrobes, pianos, fridges, washing machines, cars, motorcycles.
+          2. Count the total items for each category.
+          3. If the input is vague (e.g. "some stuff"), estimate 5 small items.
+          4. IGNORE conversational filler like "hello", "I want", "please". Focus on the objects.
+          5. Return ONLY a valid JSON object. NO markdown formatting. NO explanations.
           
           EXAMPLES:
-          User: "I want to store 2 bikes and a sofa"
-          Response: { "small": 0, "medium": 2, "large": 1 }
+          Input: "I want to store 2 bikes and a sofa"
+          Output: { "small": 0, "medium": 2, "large": 1 }
 
-          User: "1 vaso"
-          Response: { "small": 1, "medium": 0, "large": 0 }
+          Input: "1 vaso"
+          Output: { "small": 1, "medium": 0, "large": 0 }
+
+          Input: "una caja y 3 maletas"
+          Output: { "small": 4, "medium": 0, "large": 0 }
+
+          Input: "mesa"
+          Output: { "small": 0, "medium": 1, "large": 0 }
         `;
 
         const messages = [
@@ -40,8 +44,8 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
             { role: "user", content: query }
         ];
 
-        // Call Workers AI (Using Google Gemma)
-        const response = await ctx.env.AI.run('@cf/google/gemma-7b-it', {
+        // Call Workers AI
+        const response = await ctx.env.AI.run('@cf/meta/llama-3-8b-instruct', {
             messages
         });
 
@@ -55,37 +59,20 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
         // If it's already an object, great. 
         // Note: The specific return shape depends on valid binding execution.
 
-        // Safe parsing attempt with Regex extraction
-        let rawText = "";
+        // Safe parsing attempt
+        let jsonStr = "";
+        if (typeof result === 'string') jsonStr = result;
+        else if (result.response) jsonStr = result.response;
+        else if (typeof result === 'object') return Response.json(result); // Already JSON?
 
-        if (typeof result === 'string') rawText = result;
-        else if (result.response) rawText = result.response;
-        else if (typeof result === 'object') {
-            // Sometimes it might already be the object we want, or a wrapped one
-            // If it has small/medium/large keys, it's our object.
-            if ('small' in result) return Response.json(result);
-            rawText = JSON.stringify(result);
-        }
+        // Clean markdown code blocks if any
+        jsonStr = jsonStr.replace(/```json/g, "").replace(/```/g, "").trim();
 
-        // Regex to find the FIRST valid JSON object structure "{...}"
-        // This ignores "Here is your JSON:" prefixes or explanations.
-        const jsonMatch = rawText.match(/\{[\s\S]*\}/);
-
-        if (!jsonMatch) {
-            throw new Error(`No JSON found in response: ${rawText.substring(0, 100)}...`);
-        }
-
-        const jsonStr = jsonMatch[0];
         const counts = JSON.parse(jsonStr);
 
         return Response.json(counts);
 
     } catch (e: any) {
-        return Response.json({
-            error: "AI Processing Error",
-            details: e.message,
-            // Return a safe fallback so the UI simply shows 0s instead of crashing/hanging
-            fallback: { small: 0, medium: 0, large: 0 }
-        }, { status: 200 }); // Return 200 with 0s so frontend displays *something*
+        return Response.json({ error: "AI Error", details: e.message }, { status: 500 });
     }
 }
