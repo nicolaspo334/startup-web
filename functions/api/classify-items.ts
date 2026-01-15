@@ -55,20 +55,37 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
         // If it's already an object, great. 
         // Note: The specific return shape depends on valid binding execution.
 
-        // Safe parsing attempt
-        let jsonStr = "";
-        if (typeof result === 'string') jsonStr = result;
-        else if (result.response) jsonStr = result.response;
-        else if (typeof result === 'object') return Response.json(result); // Already JSON?
+        // Safe parsing attempt with Regex extraction
+        let rawText = "";
 
-        // Clean markdown code blocks if any
-        jsonStr = jsonStr.replace(/```json/g, "").replace(/```/g, "").trim();
+        if (typeof result === 'string') rawText = result;
+        else if (result.response) rawText = result.response;
+        else if (typeof result === 'object') {
+            // Sometimes it might already be the object we want, or a wrapped one
+            // If it has small/medium/large keys, it's our object.
+            if ('small' in result) return Response.json(result);
+            rawText = JSON.stringify(result);
+        }
 
+        // Regex to find the FIRST valid JSON object structure "{...}"
+        // This ignores "Here is your JSON:" prefixes or explanations.
+        const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+
+        if (!jsonMatch) {
+            throw new Error(`No JSON found in response: ${rawText.substring(0, 100)}...`);
+        }
+
+        const jsonStr = jsonMatch[0];
         const counts = JSON.parse(jsonStr);
 
         return Response.json(counts);
 
     } catch (e: any) {
-        return Response.json({ error: "AI Error", details: e.message }, { status: 500 });
+        return Response.json({
+            error: "AI Processing Error",
+            details: e.message,
+            // Return a safe fallback so the UI simply shows 0s instead of crashing/hanging
+            fallback: { small: 0, medium: 0, large: 0 }
+        }, { status: 200 }); // Return 200 with 0s so frontend displays *something*
     }
 }
