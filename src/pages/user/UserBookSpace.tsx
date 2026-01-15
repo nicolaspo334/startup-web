@@ -37,7 +37,7 @@ export default function UserBookSpace() {
     const [qtySmall, setQtySmall] = useState(0);
     const [qtyMedium, setQtyMedium] = useState(0);
     const [qtyLarge, setQtyLarge] = useState(0);
-    const [loading, setLoading] = useState(false);
+
 
     useEffect(() => {
         if (!id) return;
@@ -333,11 +333,10 @@ export default function UserBookSpace() {
                         </p>
                     </div>
 
-                    {/* Buttons */}
                     <div style={styles.buttonRow}>
                         <button style={styles.cancelBtn} onClick={() => navigate(-1)}>Cancelar</button>
-                        <button style={styles.reserveBtn} onClick={handleReserve} disabled={loading}>
-                            {loading ? "Procesando..." : "Continuar"}
+                        <button style={styles.reserveBtn} onClick={handleReserve}>
+                            Continuar
                         </button>
                     </div>
 
