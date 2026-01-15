@@ -157,7 +157,7 @@ export default function UserBookSpace() {
         if (qtyLarge > availability.large) setQtyLarge(0);
     }, [startDate, endDate]);
 
-    const handleReserve = async () => {
+    const handleReserve = () => {
         if (!space) return;
         const userId = localStorage.getItem("user_id");
         if (!userId) {
@@ -176,35 +176,19 @@ export default function UserBookSpace() {
             return;
         }
 
-        setLoading(true);
-        try {
-            const res = await fetch("/api/create-reservation", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    user_id: userId,
-                    space_id: space.id,
-                    start_date: startDate,
-                    end_date: endDate,
-                    qty_small: qtySmall,
-                    qty_medium: qtyMedium,
-                    qty_large: qtyLarge
-                })
-            });
-
-            const data = await res.json() as any;
-            if (data.ok) {
-                alert("¡Reserva realizada con éxito!");
-                navigate("/buscar");
-            } else {
-                alert("Error al reservar: " + data.error);
+        // Navigate to Verification Page with state
+        navigate("/usuario/verificar-objetos", {
+            state: {
+                user_id: userId,
+                space_id: space.id,
+                space_name: space.name,
+                start_date: startDate,
+                end_date: endDate,
+                qty_small: qtySmall,
+                qty_medium: qtyMedium,
+                qty_large: qtyLarge
             }
-        } catch (err) {
-            console.error(err);
-            alert("Error de conexión");
-        } finally {
-            setLoading(false);
-        }
+        });
     };
 
     if (!space) return <div style={{ padding: 40 }}>Cargando espacio...</div>;
@@ -342,11 +326,18 @@ export default function UserBookSpace() {
 
                     <div style={styles.divider} />
 
+                    {/* Warning Note */}
+                    <div style={{ marginBottom: 15, padding: 12, background: "#fff8e1", borderLeft: "4px solid #ffc107", borderRadius: 4 }}>
+                        <p style={{ margin: 0, fontSize: 13, color: "#856404" }}>
+                            ⚠️ Antes de realizar tu reserva deberás enviar al dueño del espacio una foto de cada objeto para su aprobación.
+                        </p>
+                    </div>
+
                     {/* Buttons */}
                     <div style={styles.buttonRow}>
                         <button style={styles.cancelBtn} onClick={() => navigate(-1)}>Cancelar</button>
                         <button style={styles.reserveBtn} onClick={handleReserve} disabled={loading}>
-                            {loading ? "Procesando..." : "Reservar"}
+                            {loading ? "Procesando..." : "Continuar"}
                         </button>
                     </div>
 

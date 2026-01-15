@@ -13,6 +13,7 @@ import UserLogin from "./pages/user/UserLogin";
 import UserRegister from "./pages/user/UserRegister";
 import UserSearch from "./pages/user/UserSearch";
 import UserBookSpace from "./pages/user/UserBookSpace";
+import UserVerifyItems from "./pages/user/UserVerifyItems";
 import OwnerSpaceAnalytics from "./pages/owner/OwnerSpaceAnalytics";
 
 export default function App() {
@@ -33,6 +34,7 @@ export default function App() {
       <Route path="/usuario" element={<UserAuth />} />
       <Route path="/buscar" element={<UserSearch />} />
       <Route path="/usuario/reservar/:id" element={<UserBookSpace />} />
+      <Route path="/usuario/verificar-objetos" element={<UserVerifyItems />} />
       <Route path="/usuario/login" element={<UserLogin />} />
       <Route path="/usuario/register" element={<UserRegister />} />
     </Routes>

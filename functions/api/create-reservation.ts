@@ -7,7 +7,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     try {
         const { request, env } = context;
         const body = await request.json() as any;
-        const { user_id, space_id, start_date, end_date, qty_small, qty_medium, qty_large } = body;
+        const { user_id, space_id, start_date, end_date, qty_small, qty_medium, qty_large, item_photos, status } = body;
 
         // Basic validation
         if (!user_id || !space_id || !start_date || !end_date) {
@@ -21,8 +21,8 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 
         // Simple insertion for now as per plan
         const info = await env.SPACES_DB.prepare(`
-      INSERT INTO reservations (user_id, space_id, start_date, end_date, qty_small, qty_medium, qty_large, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO reservations (user_id, space_id, start_date, end_date, qty_small, qty_medium, qty_large, created_at, item_photos, status)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
             user_id,
             space_id,
@@ -31,7 +31,9 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
             qty_small || 0,
             qty_medium || 0,
             qty_large || 0,
-            Date.now()
+            Date.now(),
+            JSON.stringify(item_photos || []),
+            status || 'pending'
         ).run();
 
         if (info.success) {
