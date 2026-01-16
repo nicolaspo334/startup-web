@@ -1,14 +1,17 @@
 import { useState } from "react";
 import AuthModal from "../components/AuthModal";
+import TermsModal from "../components/TermsModal";
 
 export default function Home() {
   const [authOpen, setAuthOpen] = useState(false);
+  const [termsOpen, setTermsOpen] = useState(false);
   const [authRole, setAuthRole] = useState<"user" | "owner">("user");
 
   const openAuth = (role: "user" | "owner") => {
     setAuthRole(role);
     setAuthOpen(true);
   };
+
 
   const scrollToSection = (id: string) => {
     const el = document.getElementById(id);
@@ -122,13 +125,28 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Footer / Contact / Terms */}
-      <div id="contact" style={styles.footer}>
+      {/* Contact Section (Empty for now) */}
+      <div id="contact" style={styles.sectionLight}>
+        <h2 style={styles.sectionTitleCenter}>Contacto</h2>
+        <div style={{ height: 100 }}></div>
+      </div>
+
+      {/* Terms Section */}
+      <div id="terms" style={styles.footer}>
         <div style={styles.footerContent}>
-          <div id="terms">
-            <p>© 2024 Guardyy. Todos los derechos reservados.</p>
-            <p style={{ fontSize: 12, opacity: 0.7 }}>Términos y condiciones | Política de privacidad</p>
+          <div style={styles.termsBox}>
+            <p style={{ margin: 0 }}>
+              Puede consultar nuestros términos y condiciones{" "}
+              <button
+                onClick={() => setTermsOpen(true)}
+                style={styles.termsLink}
+              >
+                aquí
+              </button>
+            </p>
           </div>
+
+          <p style={{ marginTop: 40, opacity: 0.5, fontSize: 12 }}>© 2026 Guardyy. Todos los derechos reservados.</p>
         </div>
       </div>
 
@@ -137,6 +155,11 @@ export default function Home() {
         onClose={() => setAuthOpen(false)}
         initialRole={authRole}
         initialMode="login"
+      />
+
+      <TermsModal
+        isOpen={termsOpen}
+        onClose={() => setTermsOpen(false)}
       />
     </div>
   );
@@ -448,6 +471,25 @@ const styles: Record<string, React.CSSProperties> = {
     margin: "0 auto",
     display: "flex",
     flexDirection: "column",
+    alignItems: "center",
     gap: 20
+  },
+  termsBox: {
+    border: "1px solid rgba(255,255,255,0.3)",
+    padding: "20px 40px",
+    borderRadius: 8,
+    background: "rgba(255,255,255,0.05)",
+    fontSize: 14
+  },
+  termsLink: {
+    background: "transparent",
+    border: "none",
+    color: "#4dabf5", // Light blue link
+    textDecoration: "underline",
+    cursor: "pointer",
+    fontSize: "inherit",
+    padding: 0,
+    margin: 0,
+    fontWeight: "bold"
   }
 };
