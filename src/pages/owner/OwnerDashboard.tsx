@@ -59,10 +59,9 @@ export default function OwnerDashboard() {
             <div style={styles.content}>
                 <div style={styles.topBar}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 15 }}>
-                        <button onClick={() => navigate("/dueno")} style={styles.backBtn}>←</button>
+                        <button onClick={handleLogout} style={styles.logoutBtn}>Cerrar Sesión</button>
                         <h1 style={styles.title}>Mis Espacios</h1>
                     </div>
-                    <button onClick={handleLogout} style={styles.logoutBtn}>Cerrar Sesión</button>
                 </div>
 
                 <div style={styles.mainArea}>
