@@ -15,7 +15,7 @@ export const onRequestGet: PagesFunction<{ SPACES_DB: D1Database }> = async (ctx
                 s.name as space_name, s.address as space_address, s.id as space_id, s.image_base64
             FROM reservations r
             JOIN spaces s ON r.space_id = s.id
-            WHERE r.user_id = ?
+            WHERE r.user_id = ? AND r.status != 'rejected'
             ORDER BY r.start_date ASC
         `).bind(user_id).all();
 
