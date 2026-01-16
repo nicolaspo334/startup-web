@@ -88,9 +88,9 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
              id, owner_id, name, address, province, country, type, size_m2, 
              capacity_small, capacity_medium, capacity_large, 
              price_small, price_medium, price_large,
-             allowed_items, image_base64, lat, lng
+             image_base64, lat, lng, min_days
            ) 
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
         ).bind(
             id,
             owner_id,
@@ -109,7 +109,8 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
             allowed_items,
             filename,
             lat,
-            lng
+            lng,
+            body.min_days || 1
         ).run();
 
         return Response.json({ ok: true, id });

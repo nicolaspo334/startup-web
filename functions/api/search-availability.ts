@@ -41,6 +41,7 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
             return arr;
         };
         const searchDates = getDates(start_date, end_date);
+        const durationDays = searchDates.length;
 
         // 4. Filter Spaces
         const availableSpaces = spaces.filter(space => {
@@ -79,7 +80,8 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
             return (
                 availableSmall >= (req_small || 0) &&
                 availableMedium >= (req_medium || 0) &&
-                availableLarge >= (req_large || 0)
+                availableLarge >= (req_large || 0) &&
+                ((space.min_days || 1) <= durationDays)
             );
         });
 

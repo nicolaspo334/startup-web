@@ -21,6 +21,7 @@ export default function OwnerEditSpace() {
     const [priceSmall, setPriceSmall] = useState("");
     const [priceMedium, setPriceMedium] = useState("");
     const [priceLarge, setPriceLarge] = useState("");
+    const [minDays, setMinDays] = useState("1");
 
     // Image
     const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -51,6 +52,7 @@ export default function OwnerEditSpace() {
                     setPriceSmall(String(s.price_small || 0));
                     setPriceMedium(String(s.price_medium || 0));
                     setPriceLarge(String(s.price_large || 0));
+                    setMinDays(String(s.min_days || 1));
 
                     // Handle image preview
                     if (s.image_base64) {
@@ -133,6 +135,7 @@ export default function OwnerEditSpace() {
                     price_small: parseFloat(priceSmall) || 0,
                     price_medium: parseFloat(priceMedium) || 0,
                     price_large: parseFloat(priceLarge) || 0,
+                    min_days: parseInt(minDays) || 1,
                     image_base64: imageBase64
                 }),
             });
@@ -328,6 +331,19 @@ export default function OwnerEditSpace() {
                                         step="0.01"
                                     />
                                 </div>
+                            </div>
+
+                            <div style={styles.fieldGroup}>
+                                <label style={styles.label}>Estancia mínima (días)</label>
+                                <input
+                                    style={styles.input}
+                                    type="number"
+                                    min="1"
+                                    value={minDays}
+                                    onChange={e => setMinDays(e.target.value)}
+                                    placeholder="Ej. 1"
+                                    required
+                                />
                             </div>
 
                             <div style={styles.actions}>

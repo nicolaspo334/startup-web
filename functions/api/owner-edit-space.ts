@@ -77,7 +77,7 @@ export const onRequestPut: PagesFunction<Env> = async (ctx) => {
              name = ?, address = ?, province = ?, country = ?, type = ?, size_m2 = ?, 
              capacity_small = ?, capacity_medium = ?, capacity_large = ?, 
              price_small = ?, price_medium = ?, price_large = ?,
-             image_base64 = ?, lat = ?, lng = ?
+             image_base64 = ?, lat = ?, lng = ?, min_days = ?
            WHERE id = ? AND owner_id = ?`
         ).bind(
             name,
@@ -95,6 +95,7 @@ export const onRequestPut: PagesFunction<Env> = async (ctx) => {
             filename,
             lat,
             lng,
+            body.min_days || 1,
             id,
             owner_id
         ).run();
