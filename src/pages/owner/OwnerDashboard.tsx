@@ -46,7 +46,7 @@ export default function OwnerDashboard() {
 
     const handleLogout = () => {
         localStorage.removeItem("owner_id");
-        navigate("/dueno");
+        navigate("/");
     };
 
     if (loading) return null; // Or a spinner

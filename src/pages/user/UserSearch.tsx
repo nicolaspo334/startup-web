@@ -96,7 +96,7 @@ export default function UserSearch() {
 
     const handleLogout = () => {
         localStorage.removeItem("user_id");
-        navigate("/usuario/login");
+        navigate("/");
     };
 
     const handleDeleteReservation = async (id: number) => {

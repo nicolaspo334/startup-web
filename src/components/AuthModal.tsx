@@ -10,7 +10,6 @@ interface AuthModalProps {
 
 export default function AuthModal({ isOpen, onClose, initialRole, initialMode }: AuthModalProps) {
     const navigate = useNavigate();
-    const [role] = useState(initialRole); // 'user' | 'owner'
     const [mode, setMode] = useState(initialMode); // 'login' | 'register'
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
@@ -27,7 +26,7 @@ export default function AuthModal({ isOpen, onClose, initialRole, initialMode }:
         setLoading(true);
 
         const endpoint =
-            role === "user"
+            initialRole === "user"
                 ? mode === "login" ? "/api/user-login" : "/api/user-register"
                 : mode === "login" ? "/api/owner-login" : "/api/owner-register";
 
@@ -43,7 +42,7 @@ export default function AuthModal({ isOpen, onClose, initialRole, initialMode }:
             if (res.ok) {
                 // Success
                 if (mode === "login") {
-                    if (role === "user") {
+                    if (initialRole === "user") {
                         localStorage.setItem("user_id", data.id);
                         navigate("/buscar");
                     } else {
@@ -57,7 +56,7 @@ export default function AuthModal({ isOpen, onClose, initialRole, initialMode }:
                     // Let's make it seamless: Auto-login would be best, but for now let's just log them in if the API returns the ID (it usually does for register).
                     // Checking previous register logic: it returned ID.
 
-                    if (role === "user") {
+                    if (initialRole === "user") {
                         localStorage.setItem("user_id", data.id);
                         navigate("/buscar");
                     } else {
@@ -94,7 +93,7 @@ export default function AuthModal({ isOpen, onClose, initialRole, initialMode }:
                         {mode === "login" ? "Bienvenido de nuevo" : "Crea tu cuenta"}
                     </h2>
                     <p style={styles.subtitle}>
-                        {role === "user" ? "Encuentra el espacio perfecto" : "Rentabiliza tu espacio"}
+                        {initialRole === "user" ? "Encuentra el espacio perfecto" : "Rentabiliza tu espacio"}
                     </p>
 
                     <form onSubmit={onSubmit} style={styles.form}>
