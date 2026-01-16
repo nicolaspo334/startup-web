@@ -1,6 +1,15 @@
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import AuthModal from "../components/AuthModal";
 
 export default function Home() {
+  const [authOpen, setAuthOpen] = useState(false);
+  const [authRole, setAuthRole] = useState<"user" | "owner">("user");
+
+  const openAuth = (role: "user" | "owner") => {
+    setAuthRole(role);
+    setAuthOpen(true);
+  };
+
   return (
     <div style={styles.page}>
       <img src="/city.jpg" alt="Ciudad" style={styles.bg} />
@@ -10,15 +19,22 @@ export default function Home() {
         <h1 style={styles.brand}>Guardyy</h1>
 
         <div style={styles.buttons}>
-          <Link to="/dueno" style={styles.primaryBtn}>
+          <button onClick={() => openAuth("owner")} style={styles.primaryBtn}>
             Soy dueño de un espacio
-          </Link>
+          </button>
 
-          <Link to="/usuario" style={styles.secondaryBtn}>
+          <button onClick={() => openAuth("user")} style={styles.secondaryBtn}>
             Busco guardar mis cosas
-          </Link>
+          </button>
         </div>
       </div>
+
+      <AuthModal
+        isOpen={authOpen}
+        onClose={() => setAuthOpen(false)}
+        initialRole={authRole}
+        initialMode="login" // Default to login, they can switch
+      />
     </div>
   );
 }
@@ -80,6 +96,7 @@ const styles: Record<string, React.CSSProperties> = {
     textDecoration: "none",
     border: "1px solid rgba(255,255,255,0.4)",
     boxShadow: "0 14px 28px rgba(0,0,0,0.35)",
+    cursor: "pointer",
   },
   secondaryBtn: {
     fontFamily: '"Playfair Display", serif',
@@ -92,5 +109,6 @@ const styles: Record<string, React.CSSProperties> = {
     textDecoration: "none",
     border: "1px solid rgba(255,255,255,0.4)",
     boxShadow: "0 14px 28px rgba(0,0,0,0.35)",
+    cursor: "pointer",
   },
 };
