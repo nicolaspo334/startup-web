@@ -47,30 +47,32 @@ export default function Home() {
             </button>
           </div>
         </div>
-      </div>
 
-      {/* Marquee Section */}
-      <div style={styles.marqueeContainer}>
-        <div className="animate-marquee" style={styles.marqueeTrack}>
-          {/* Duplicate items for infinite scroll effect */}
-          {[...Array(6)].map((_, i) => (
-            <div key={i} style={styles.marqueeItem}>
-              <span>🔒 Hosts verificados, pago seguro</span>
-              <span style={styles.separator}>•</span>
-              <span>🇪🇸 Hecho por locales, para locales</span>
-              <span style={styles.separator}>•</span>
-              <span>📍 Almacenamiento cerca, estés donde estés</span>
-              <span style={styles.separator}>•</span>
-            </div>
-          ))}
+        {/* Marquee Section - Now inside Hero */}
+        <div style={styles.marqueeContainer}>
+          <div className="animate-marquee" style={styles.marqueeTrack}>
+            {[...Array(6)].map((_, i) => (
+              <div key={i} style={styles.marqueeItem}>
+                <span>🔒 Hosts verificados, pago seguro</span>
+                <span style={styles.separator}>•</span>
+                <span>🇪🇸 Hecho por locales, para locales</span>
+                <span style={styles.separator}>•</span>
+                <span>📍 Almacenamiento cerca, estés donde estés</span>
+                <span style={styles.separator}>•</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
       {/* About Section */}
       <div id="about" style={styles.section}>
-        <div style={styles.sectionContent}>
+        <img src="/about-bg.jpg" alt="Fondo Sobre Nosotros" style={styles.bg} />
+        <div style={styles.overlay} />
+
+        <div style={styles.sectionContentRelative}>
           <div style={styles.aboutText}>
-            <h2 style={styles.sectionTitle}>Sobre nosotros</h2>
+            <h2 style={styles.sectionTitleWhite}>Sobre nosotros</h2>
             <div style={styles.aboutBox}>
               <p style={styles.aboutParagraph}>
                 ¿Tienes cosas en casa que no quieres tirar pero a la vez no sabes dónde meterlas?
@@ -80,17 +82,16 @@ export default function Home() {
               </p>
             </div>
           </div>
-          <div style={styles.aboutImageContainer}>
-            {/* Placeholder for About Image - User provided one but I'll use a generic placeholder or the one they uploaded if I had the path, but for now a generic one is safer and they can swap it */}
-            <div style={styles.imagePlaceholder}>Imagen Sobre Nosotros</div>
-          </div>
         </div>
       </div>
 
       {/* How it Works Section */}
-      <div id="how-it-works" style={styles.sectionLight}>
-        <div style={styles.sectionContentColumn}>
-          <h2 style={styles.sectionTitleCenter}>Cómo funciona</h2>
+      <div id="how-it-works" style={styles.section}>
+        <img src="/how-it-works-bg.jpg" alt="Fondo Cómo Funciona" style={styles.bg} />
+        <div style={styles.overlay} />
+
+        <div style={styles.sectionContentColumnRelative}>
+          <h2 style={styles.sectionTitleCenterWhite}>Cómo funciona</h2>
 
           <div style={styles.cardsGrid}>
             {/* Card 1 */}
@@ -118,9 +119,6 @@ export default function Home() {
               <p style={styles.cardText}> ¡Reserva el espacio que más te convenga!</p>
             </div>
           </div>
-
-          {/* Image Placeholder for How It Works */}
-          <div style={{ ...styles.imagePlaceholder, height: 200, marginTop: 40 }}>Imagen Cómo Funciona</div>
         </div>
       </div>
 
@@ -258,13 +256,20 @@ const styles: Record<string, React.CSSProperties> = {
   },
   // Marquee
   marqueeContainer: {
-    background: "#f0f0f0", // Light grey as per "paper" look or just distinct
-    padding: "20px 0",
-    borderBottom: "1px solid #ddd",
+    position: "absolute",
+    bottom: "15%", // Positioned between buttons and bottom
+    left: 0,
+    right: 0,
+    background: "rgba(128, 128, 128, 0.25)", // Transparent grey
+    backdropFilter: "blur(4px)",
+    padding: "15px 0",
+    borderTop: "1px solid rgba(255,255,255,0.2)",
+    borderBottom: "1px solid rgba(255,255,255,0.2)",
+    zIndex: 2,
     overflow: "hidden"
   },
   marqueeTrack: {
-    gap: 40,
+    gap: 60,
     alignItems: "center"
   },
   marqueeItem: {
@@ -273,20 +278,23 @@ const styles: Record<string, React.CSSProperties> = {
     gap: 40,
     fontSize: 16,
     fontWeight: 600,
-    color: "#333",
-    fontFamily: '"Playfair Display", serif'
+    color: "white", // White text
+    fontFamily: '"Playfair Display", serif',
+    textShadow: "0 2px 4px rgba(0,0,0,0.5)"
   },
   separator: {
-    color: "#ccc"
+    color: "rgba(255,255,255,0.5)"
   },
   // Sections
   section: {
-    padding: "80px 20px",
+    position: "relative",
+    padding: "100px 20px",
     minHeight: "80vh",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    background: "white"
+    background: "#111", // Fallback
+    overflow: "hidden"
   },
   sectionLight: {
     padding: "80px 20px",
@@ -304,7 +312,17 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: "center",
     // Responsive: simplified here, grid works well on desktop
   },
-  sectionContentColumn: {
+  sectionContentRelative: {
+    position: "relative",
+    zIndex: 1,
+    width: "min(1200px, 100%)",
+    display: "flex",
+    justifyContent: "flex-start", // Left align text for About
+    paddingLeft: "5%"
+  },
+  sectionContentColumnRelative: {
+    position: "relative",
+    zIndex: 1,
     width: "min(1200px, 100%)",
     display: "flex",
     flexDirection: "column",
@@ -316,46 +334,52 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 48,
     margin: "0 0 30px 0"
   },
+  sectionTitleWhite: {
+    fontFamily: '"Playfair Display", serif',
+    fontSize: 56,
+    color: "white",
+    margin: "0 0 30px 0",
+    textShadow: "0 4px 10px rgba(0,0,0,0.5)"
+  },
   sectionTitleCenter: {
     fontFamily: '"Playfair Display", serif',
     fontSize: 48,
     textAlign: "center",
     margin: "0 0 40px 0"
   },
+  sectionTitleCenterWhite: {
+    fontFamily: '"Playfair Display", serif',
+    fontSize: 56,
+    textAlign: "center",
+    color: "white",
+    margin: "0 0 40px 0",
+    textShadow: "0 4px 10px rgba(0,0,0,0.5)"
+  },
   // About
-  aboutText: {},
+  aboutText: {
+    maxWidth: 600
+  },
   aboutBox: {
-    border: "2px solid #000",
-    borderRadius: 30, // Rounded sketch-like
-    padding: 30,
-    background: "white",
-    boxShadow: "10px 10px 0px rgba(0,0,0,0.1)" // Offset shadow
+    border: "2px solid rgba(255,255,255,0.8)",
+    borderRadius: 30,
+    padding: 40,
+    background: "rgba(255,255,255,0.1)",
+    backdropFilter: "blur(10px)",
+    boxShadow: "10px 10px 0px rgba(0,0,0,0.3)", // Darker shadow for contrast
+    color: "white"
   },
   aboutParagraph: {
-    fontSize: 18,
+    fontSize: 20,
     lineHeight: 1.6,
-    color: "#333",
-    margin: 0
+    color: "white",
+    margin: 0,
+    textShadow: "0 2px 4px rgba(0,0,0,0.5)"
   },
   aboutImageContainer: {
-    height: 400,
-    background: "#eee",
-    borderRadius: 20,
-    overflow: "hidden",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center"
+    display: "none" // Removed since we use background now
   },
   imagePlaceholder: {
-    color: "#999",
-    fontSize: 24,
-    fontWeight: "bold",
-    border: "2px dashed #ccc",
-    width: "80%",
-    height: "80%",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center"
+    display: "none"
   },
   // Cards
   cardsGrid: {
