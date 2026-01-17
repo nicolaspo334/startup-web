@@ -23,8 +23,6 @@ export default function OwnerAddSpace() {
     const [priceMedium, setPriceMedium] = useState("");
     const [priceLarge, setPriceLarge] = useState("");
     const [minDays, setMinDays] = useState("1");
-    const [iban, setIban] = useState("");
-    const [accountHolder, setAccountHolder] = useState("");
 
     // Image
     const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -77,8 +75,6 @@ export default function OwnerAddSpace() {
                     price_medium: parseFloat(priceMedium) || 0,
                     price_large: parseFloat(priceLarge) || 0,
                     min_days: parseInt(minDays) || 1,
-                    iban,
-                    account_holder: accountHolder,
                     image_base64: imageBase64
                 }),
             });
@@ -288,28 +284,6 @@ export default function OwnerAddSpace() {
                                     placeholder="Ej. 1"
                                     required
                                 />
-                            </div>
-
-                            <div style={{ marginTop: 20, paddingTop: 15, borderTop: "1px solid #eee" }}>
-                                <h3 style={{ fontSize: 16, marginBottom: 15, fontWeight: "bold" }}>Datos de Cobro (Privado)</h3>
-                                <div style={styles.fieldGroup}>
-                                    <label style={styles.label}>Titular de la Cuenta</label>
-                                    <input
-                                        style={styles.input}
-                                        value={accountHolder}
-                                        onChange={e => setAccountHolder(e.target.value)}
-                                        placeholder="Nombre completo"
-                                    />
-                                </div>
-                                <div style={{ ...styles.fieldGroup, marginTop: 10 }}>
-                                    <label style={styles.label}>IBAN</label>
-                                    <input
-                                        style={styles.input}
-                                        value={iban}
-                                        onChange={e => setIban(e.target.value)}
-                                        placeholder="ES00 0000 0000 0000 0000 0000 0000"
-                                    />
-                                </div>
                             </div>
 
                             <div style={styles.actions}>
