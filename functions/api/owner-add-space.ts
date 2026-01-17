@@ -88,7 +88,7 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
              id, owner_id, name, address, province, country, type, size_m2, 
              capacity_small, capacity_medium, capacity_large, 
              price_small, price_medium, price_large,
-             image_base64, lat, lng, min_days
+             allowed_items, image_base64, lat, lng, min_days
            ) 
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
         ).bind(
