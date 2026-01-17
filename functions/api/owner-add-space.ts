@@ -114,8 +114,8 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
             lat,
             lng,
             body.min_days || 1,
-            body.iban || null,
-            body.beneficiary_name || null
+            iban || null,
+            beneficiary_name || null
         ).run();
 
         return Response.json({ ok: true, id });
