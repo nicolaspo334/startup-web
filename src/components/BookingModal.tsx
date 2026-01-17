@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import SuccessModal from "./SuccessModal";
 
 interface Space {
     id: string;
@@ -47,6 +48,8 @@ export default function BookingModal({
 }: BookingModalProps) {
     const navigate = useNavigate();
     const [reservations, setReservations] = useState<Reservation[]>([]);
+    const [successOpen, setSuccessOpen] = useState(false);
+    const [successMsg, setSuccessMsg] = useState("");
 
     // UI State
     const [step, setStep] = useState(1); // 1: Details, 2: Verification
@@ -231,9 +234,13 @@ export default function BookingModal({
 
             const data = await res.json() as any;
             if (data.ok) {
-                alert("¡Solicitud enviada! El dueño revisará tus objetos.");
-                if (onSuccess) onSuccess();
-                handleClose();
+                setSuccessMsg("¡Solicitud enviada! El dueño revisará tus objetos.");
+                setSuccessOpen(true);
+                // Delay close and callback until modal is closed or after a short delay
+                setTimeout(() => {
+                    if (onSuccess) onSuccess();
+                    handleClose();
+                }, 3000); // Give time to read and see animation
             } else {
                 alert("Error: " + data.error);
             }
@@ -413,6 +420,17 @@ export default function BookingModal({
                     </div>
                 </div>
             </div>
+
+            <SuccessModal
+                isOpen={successOpen}
+                onClose={() => {
+                    setSuccessOpen(false);
+                    // Ensure we close the parent modal if user manually closes success modal early
+                    if (onSuccess) onSuccess();
+                    handleClose();
+                }}
+                message={successMsg}
+            />
         </div>
     );
 }

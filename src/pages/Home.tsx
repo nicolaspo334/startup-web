@@ -1,10 +1,13 @@
 import { useState } from "react";
 import AuthModal from "../components/AuthModal";
 import TermsModal from "../components/TermsModal";
+import SuccessModal from "../components/SuccessModal";
 
 export default function Home() {
   const [authOpen, setAuthOpen] = useState(false);
   const [termsOpen, setTermsOpen] = useState(false);
+  const [successOpen, setSuccessOpen] = useState(false);
+  const [successMsg, setSuccessMsg] = useState("");
   const [authRole, setAuthRole] = useState<"user" | "owner">("user");
 
   const openAuth = (role: "user" | "owner") => {
@@ -161,7 +164,8 @@ export default function Home() {
                   });
 
                   if (res.ok) {
-                    alert("¡Mensaje enviado con éxito! Nos pondremos en contacto contigo pronto.");
+                    setSuccessMsg("¡Mensaje enviado con éxito! Nos pondremos en contacto contigo pronto.");
+                    setSuccessOpen(true);
                     form.reset();
                   } else {
                     alert("Hubo un problema al enviar el correo. Por favor, inténtalo de nuevo.");
@@ -220,6 +224,12 @@ export default function Home() {
       <TermsModal
         isOpen={termsOpen}
         onClose={() => setTermsOpen(false)}
+      />
+
+      <SuccessModal
+        isOpen={successOpen}
+        onClose={() => setSuccessOpen(false)}
+        message={successMsg}
       />
     </div>
   );

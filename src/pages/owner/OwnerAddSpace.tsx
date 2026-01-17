@@ -1,10 +1,13 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import SuccessModal from "../../components/SuccessModal";
 
 export default function OwnerAddSpace() {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
+    const [successOpen, setSuccessOpen] = useState(false);
+    const [successMsg, setSuccessMsg] = useState("");
 
     // Form Fields
     const [name, setName] = useState("");
@@ -79,8 +82,11 @@ export default function OwnerAddSpace() {
             const data = await res.json() as any;
 
             if (res.ok) {
-                alert("¡Espacio añadido con éxito!");
-                navigate("/dueno/dashboard");
+                setSuccessMsg("¡Espacio añadido con éxito!");
+                setSuccessOpen(true);
+                setTimeout(() => {
+                    navigate("/dueno/dashboard");
+                }, 2500);
             } else {
                 alert("Error: " + (data.error || "No se pudo guardar"));
             }
@@ -293,6 +299,14 @@ export default function OwnerAddSpace() {
                     </form>
                 </div>
             </div>
+            <SuccessModal
+                isOpen={successOpen}
+                onClose={() => {
+                    setSuccessOpen(false);
+                    navigate("/dueno/dashboard");
+                }}
+                message={successMsg}
+            />
         </div>
     );
 }

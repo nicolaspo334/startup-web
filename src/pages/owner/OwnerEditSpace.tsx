@@ -1,12 +1,15 @@
 
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import SuccessModal from "../../components/SuccessModal";
 
 export default function OwnerEditSpace() {
     const navigate = useNavigate();
     const { id } = useParams();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [successOpen, setSuccessOpen] = useState(false);
+    const [successMsg, setSuccessMsg] = useState("");
 
     // Form Fields
     const [name, setName] = useState("");
@@ -143,8 +146,11 @@ export default function OwnerEditSpace() {
             const data = await res.json() as any;
 
             if (res.ok) {
-                alert("¡Cambios guardados!");
-                navigate("/dueno/dashboard");
+                setSuccessMsg("¡Cambios guardados!");
+                setSuccessOpen(true);
+                setTimeout(() => {
+                    navigate("/dueno/dashboard");
+                }, 2500);
             } else {
                 alert("Error: " + (data.error || "No se pudo actualizar"));
             }
@@ -359,6 +365,14 @@ export default function OwnerEditSpace() {
                     </form>
                 </div>
             </div>
+            <SuccessModal
+                isOpen={successOpen}
+                onClose={() => {
+                    setSuccessOpen(false);
+                    navigate("/dueno/dashboard");
+                }}
+                message={successMsg}
+            />
         </div>
     );
 }
