@@ -10,10 +10,9 @@ export const onRequestGet: PagesFunction<{ SPACES_DB: D1Database }> = async (ctx
     try {
         const results = await ctx.env.SPACES_DB.prepare(`
             SELECT 
-                r.id, r.start_date, r.end_date, r.status,
+                r.id, r.start_date, r.end_date, 
                 r.qty_small, r.qty_medium, r.qty_large,
-                s.name as space_name, s.address as space_address, s.id as space_id, s.image_base64,
-                s.price_small, s.price_medium, s.price_large
+                s.name as space_name, s.address as space_address, s.id as space_id, s.image_base64
             FROM reservations r
             JOIN spaces s ON r.space_id = s.id
             WHERE r.user_id = ? AND r.status != 'rejected'

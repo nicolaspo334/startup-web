@@ -23,14 +23,6 @@ export const onRequestGet: PagesFunction<{ SPACES_DB: D1Database }> = async (ctx
             return Response.json({ ok: false, error: "Space not found" }, { status: 404 });
         }
 
-        // Security: Hide sensitive data if requester is not the owner
-        const isOwner = owner_id && space.owner_id === owner_id;
-
-        if (!isOwner) {
-            delete space.iban;
-            delete space.account_holder;
-        }
-
         return Response.json({ ok: true, space });
     } catch (e: any) {
         return Response.json({ ok: false, error: e.message }, { status: 500 });
