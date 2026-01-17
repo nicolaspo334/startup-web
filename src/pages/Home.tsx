@@ -125,10 +125,62 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Contact Section (Empty for now) */}
-      <div id="contact" style={styles.sectionLight}>
-        <h2 style={styles.sectionTitleCenter}>Contacto</h2>
-        <div style={{ height: 100 }}></div>
+      {/* Contact Section */}
+      <div id="contact" style={styles.section}>
+        <img src="/contact-bg.jpg" alt="Fondo Contacto" style={styles.bg} />
+        <div style={styles.overlay} />
+
+        <div style={styles.sectionContentRelative}>
+          <div style={styles.contactContainer}>
+            {/* Left: Title */}
+            <div style={styles.contactLeft}>
+              <h2 style={styles.sectionTitleWhite}>Contacto</h2>
+              <p style={styles.contactText}>
+                ¿Tienes alguna duda? Escríbenos y te responderemos lo antes posible.
+              </p>
+            </div>
+
+            {/* Right: Form */}
+            <div style={styles.contactRight}>
+              <form onSubmit={async (e) => {
+                e.preventDefault();
+                const form = e.target as HTMLFormElement;
+                const formData = new FormData(form);
+                const data = {
+                  name: formData.get("name"),
+                  surname: formData.get("surname"),
+                  email: formData.get("email"),
+                  message: formData.get("message")
+                };
+
+                try {
+                  const res = await fetch("/api/contact", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(data)
+                  });
+                  if (res.ok) {
+                    alert("¡Mensaje enviado con éxito! Nos pondremos en contacto contigo pronto.");
+                    form.reset();
+                  } else {
+                    alert("Error al enviar el mensaje. Inténtalo de nuevo.");
+                  }
+                } catch (err) {
+                  alert("Error de conexión");
+                }
+              }} style={styles.contactForm}>
+                <div style={styles.formRow}>
+                  <input required name="name" placeholder="Nombre" style={styles.contactInput} />
+                  <input required name="surname" placeholder="Apellidos" style={styles.contactInput} />
+                </div>
+                <input required name="email" type="email" placeholder="Correo electrónico" style={styles.contactInput} />
+                <textarea required name="message" placeholder="¿En qué podemos ayudarte?" style={styles.contactTextarea} rows={4} />
+
+                <button type="submit" style={styles.contactSubmitBtn}>Enviar mensaje</button>
+              </form>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Terms Section */}
@@ -491,5 +543,76 @@ const styles: Record<string, React.CSSProperties> = {
     padding: 0,
     margin: 0,
     fontWeight: "bold"
+  },
+  // Contact
+  contactContainer: {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: 60,
+    width: "100%",
+    maxWidth: 1000,
+    alignItems: "flex-start"
+  },
+  contactLeft: {
+    flex: 1,
+    minWidth: 300
+  },
+  contactText: {
+    color: "rgba(255,255,255,0.8)",
+    fontSize: 18,
+    lineHeight: 1.6
+  },
+  contactRight: {
+    flex: 1.5,
+    minWidth: 300,
+    background: "rgba(255,255,255,0.1)",
+    backdropFilter: "blur(10px)",
+    padding: 30,
+    borderRadius: 20,
+    border: "1px solid rgba(255,255,255,0.2)"
+  },
+  contactForm: {
+    display: "flex",
+    flexDirection: "column",
+    gap: 15
+  },
+  formRow: {
+    display: "flex",
+    gap: 15
+  },
+  contactInput: {
+    flex: 1,
+    width: "100%", // Valid CSS
+    background: "rgba(255,255,255,0.9)",
+    border: "none",
+    padding: "12px 16px",
+    borderRadius: 8,
+    fontSize: 14,
+    fontFamily: "inherit",
+    outline: "none"
+  },
+  contactTextarea: {
+    width: "100%",
+    background: "rgba(255,255,255,0.9)",
+    border: "none",
+    padding: "12px 16px",
+    borderRadius: 8,
+    fontSize: 14,
+    fontFamily: "inherit",
+    resize: "vertical",
+    outline: "none"
+  },
+  contactSubmitBtn: {
+    background: "white",
+    color: "black",
+    border: "none",
+    padding: "12px",
+    borderRadius: 8,
+    fontWeight: "bold",
+    cursor: "pointer",
+    marginTop: 10,
+    transition: "transform 0.2s",
+    fontFamily: '"Playfair Display", serif',
+    fontSize: 16
   }
 };
