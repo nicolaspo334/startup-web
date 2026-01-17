@@ -25,6 +25,9 @@ export default function OwnerEditSpace() {
     const [priceMedium, setPriceMedium] = useState("");
     const [priceLarge, setPriceLarge] = useState("");
     const [minDays, setMinDays] = useState("1");
+    // Bank Details
+    const [iban, setIban] = useState("");
+    const [accountHolder, setAccountHolder] = useState("");
 
     // Image
     const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -56,6 +59,8 @@ export default function OwnerEditSpace() {
                     setPriceMedium(String(s.price_medium || 0));
                     setPriceLarge(String(s.price_large || 0));
                     setMinDays(String(s.min_days || 1));
+                    setIban(s.iban || "");
+                    setAccountHolder(s.account_holder || "");
 
                     // Handle image preview
                     if (s.image_base64) {
@@ -139,7 +144,9 @@ export default function OwnerEditSpace() {
                     price_medium: parseFloat(priceMedium) || 0,
                     price_large: parseFloat(priceLarge) || 0,
                     min_days: parseInt(minDays) || 1,
-                    image_base64: imageBase64
+                    image_base64: imageBase64,
+                    iban: iban,
+                    account_holder: accountHolder
                 }),
             });
 
@@ -349,6 +356,28 @@ export default function OwnerEditSpace() {
                                     onChange={e => setMinDays(e.target.value)}
                                     placeholder="Ej. 1"
                                     required
+                                />
+                            </div>
+
+                            <div style={{ height: 1, background: '#eee', margin: '10px 0' }} />
+
+                            <h3 style={{ fontSize: 16, fontWeight: 'bold' }}>Datos de Cobro</h3>
+                            <div style={styles.fieldGroup}>
+                                <label style={styles.label}>Nombre del Titular</label>
+                                <input
+                                    style={styles.input}
+                                    value={accountHolder}
+                                    onChange={e => setAccountHolder(e.target.value)}
+                                    placeholder="Ej. Juan Pérez"
+                                />
+                            </div>
+                            <div style={styles.fieldGroup}>
+                                <label style={styles.label}>IBAN</label>
+                                <input
+                                    style={styles.input}
+                                    value={iban}
+                                    onChange={e => setIban(e.target.value)}
+                                    placeholder="ES21 0000 0000 0000 0000 0000"
                                 />
                             </div>
 

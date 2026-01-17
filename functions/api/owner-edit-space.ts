@@ -77,7 +77,7 @@ export const onRequestPut: PagesFunction<Env> = async (ctx) => {
              name = ?, address = ?, province = ?, country = ?, type = ?, size_m2 = ?, 
              capacity_small = ?, capacity_medium = ?, capacity_large = ?, 
              price_small = ?, price_medium = ?, price_large = ?,
-             image_base64 = ?, lat = ?, lng = ?, min_days = ?
+             image_base64 = ?, lat = ?, lng = ?, min_days = ?, iban = ?, account_holder = ?
            WHERE id = ? AND owner_id = ?`
         ).bind(
             name,
@@ -96,6 +96,8 @@ export const onRequestPut: PagesFunction<Env> = async (ctx) => {
             lat,
             lng,
             body.min_days || 1,
+            body.iban || null,
+            body.account_holder || null,
             id,
             owner_id
         ).run();

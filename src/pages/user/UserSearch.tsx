@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import BookingModal from "../../components/BookingModal";
+import PaymentModal from "../../components/PaymentModal";
 
 // Standard Red Marker (Leaflet style)
 import L from "leaflet";
@@ -48,6 +49,11 @@ interface Reservation {
     qty_medium: number;
     qty_large: number;
     image_base64: string;
+    // New fields
+    status: string;
+    price_small: number;
+    price_medium: number;
+    price_large: number;
 }
 
 export default function UserSearch() {
@@ -65,6 +71,10 @@ export default function UserSearch() {
 
     const [selectedSpace, setSelectedSpace] = useState<any | null>(null);
     const [modalInitialState, setModalInitialState] = useState<{ start: string, end: string, qs: number, qm: number, ql: number } | null>(null);
+
+    // Payment State
+    const [paymentOpen, setPaymentOpen] = useState(false);
+    const [paymentData, setPaymentData] = useState<{ amount: number, spaceName: string, id: number } | null>(null);
 
     // Initial Load
     useEffect(() => {
@@ -257,30 +267,49 @@ export default function UserSearch() {
                                     {res.qty_large > 0 && <span>📦 Gra: {res.qty_large}</span>}
                                 </div>
                                 <div style={styles.resActions}>
-                                    <button
-                                        style={styles.editBtn}
-                                        onClick={() => {
-                                            const space = allSpaces.find(s => s.id === res.space_id);
-                                            if (space) {
-                                                setModalInitialState({
-                                                    start: res.start_date.split('T')[0],
-                                                    end: res.end_date.split('T')[0],
-                                                    qs: res.qty_small,
-                                                    qm: res.qty_medium,
-                                                    ql: res.qty_large
+                                    {/* Status Badge */}
+                                    <div style={{
+                                        ...styles.statusBadge,
+                                        background: res.status === 'approved' ? '#d4edda' : res.status === 'confirmed' ? '#e2e3e5' : '#fff3cd',
+                                        color: res.status === 'approved' ? '#155724' : res.status === 'confirmed' ? '#383d41' : '#856404'
+                                    }}>
+                                        {res.status === 'pending' && '⏳ Pendiente'}
+                                        {res.status === 'approved' && '✅ Aprobado (Pago pendiente)'}
+                                        {res.status === 'confirmed' && '🎉 Confirmado'}
+                                    </div>
+
+                                    {/* Pay Button - Only if Approved */}
+                                    {res.status === 'approved' && (
+                                        <button
+                                            style={styles.payBtn}
+                                            onClick={() => {
+                                                // Calculate Total
+                                                const start = new Date(res.start_date);
+                                                const end = new Date(res.end_date);
+                                                const days = Math.ceil(Math.abs(end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+
+                                                const daily =
+                                                    (res.qty_small * res.price_small) +
+                                                    (res.qty_medium * res.price_medium) +
+                                                    (res.qty_large * res.price_large);
+
+                                                setPaymentData({
+                                                    amount: daily * days,
+                                                    spaceName: res.space_name,
+                                                    id: res.id
                                                 });
-                                                setSelectedSpace(space);
-                                            }
-                                        }}
-                                        title="Editar (Modificar reserva)"
-                                    >
-                                        Editar
-                                    </button>
+                                                setPaymentOpen(true);
+                                            }}
+                                        >
+                                            Pagar Ahora
+                                        </button>
+                                    )}
+
                                     <button
                                         style={styles.deleteBtn}
                                         onClick={() => handleDeleteReservation(res.id)}
                                     >
-                                        Eliminar
+                                        Cancelar
                                     </button>
                                 </div>
                             </div>
@@ -351,6 +380,22 @@ export default function UserSearch() {
             </MapContainer>
 
             {/* Booking Modal Overlay */}
+            {/* Payment Modal */}
+            {paymentOpen && paymentData && (
+                <PaymentModal
+                    isOpen={paymentOpen}
+                    onClose={() => setPaymentOpen(false)}
+                    amount={paymentData.amount}
+                    spaceName={paymentData.spaceName}
+                    onSuccess={() => {
+                        // Optimistic update or reload
+                        // In real life: Update status via API first
+                        fetch(`/api/confirm-payment?id=${paymentData.id}`, { method: 'POST' })
+                            .then(() => loadReservations());
+                    }}
+                />
+            )}
+
             {selectedSpace && (
                 <BookingModal
                     space={selectedSpace}
@@ -545,5 +590,24 @@ const styles: Record<string, React.CSSProperties> = {
         marginTop: 8,
         cursor: "pointer",
         fontWeight: 600
+    },
+    statusBadge: {
+        fontSize: 11,
+        padding: "4px 8px",
+        borderRadius: 12,
+        marginBottom: 8,
+        display: "inline-block",
+        fontWeight: 600
+    },
+    payBtn: {
+        width: "100%",
+        background: "#28a745",
+        color: "white",
+        border: "none",
+        padding: "8px",
+        borderRadius: 8,
+        cursor: "pointer",
+        fontWeight: 600,
+        marginBottom: 8
     }
 };
