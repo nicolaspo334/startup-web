@@ -146,29 +146,37 @@ export default function Home() {
                 e.preventDefault();
                 const form = e.target as HTMLFormElement;
                 const formData = new FormData(form);
-                const data = {
-                  name: formData.get("name"),
-                  surname: formData.get("surname"),
-                  email: formData.get("email"),
-                  message: formData.get("message")
-                };
+
+                // Convert FormData to JSON for FormSubmit AJAX
+                const data = Object.fromEntries(formData.entries());
 
                 try {
-                  const res = await fetch("/api/contact", {
+                  const res = await fetch("https://formsubmit.co/ajax/guardyycontacto@gmail.com", {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'Accept': 'application/json'
+                    },
                     body: JSON.stringify(data)
                   });
+
                   if (res.ok) {
                     alert("¡Mensaje enviado con éxito! Nos pondremos en contacto contigo pronto.");
                     form.reset();
                   } else {
-                    alert("Error al enviar el mensaje. Inténtalo de nuevo.");
+                    alert("Hubo un problema al enviar el correo. Por favor, inténtalo de nuevo.");
                   }
                 } catch (err) {
-                  alert("Error de conexión");
+                  alert("Error de conexión. Inténtalo más tarde.");
+                  console.error(err);
                 }
               }} style={styles.contactForm}>
+
+                {/* FormSubmit Configuration (Hidden Inputs) */}
+                <input type="hidden" name="_subject" value="Nuevo contacto desde Guardyy Web" />
+                <input type="hidden" name="_template" value="table" />
+                <input type="hidden" name="_captcha" value="false" />
+
                 <div style={styles.formRow}>
                   <input required name="name" placeholder="Nombre" style={styles.contactInput} />
                   <input required name="surname" placeholder="Apellidos" style={styles.contactInput} />
