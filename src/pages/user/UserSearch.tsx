@@ -78,6 +78,7 @@ export default function UserSearch() {
 
     // Initial Load
     useEffect(() => {
+        console.log("UserSearch mounted. Fetching data...");
         // Fetch Spaces
         fetch("/api/get-all-spaces")
             .then(res => res.json())

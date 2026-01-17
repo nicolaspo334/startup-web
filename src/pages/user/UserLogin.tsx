@@ -9,8 +9,10 @@ export default function UserLogin() {
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Attempting login with:", usuario);
 
     try {
+      console.log("Fetching /api/user-login...");
       const res = await fetch("/api/user-login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
