@@ -110,7 +110,7 @@ const styles: Record<string, React.CSSProperties> = {
     videoContainer: {
         width: 150,
         height: 150,
-        borderRadius: "50%",
+        // borderRadius: "50%", // Removed as per request
         overflow: "hidden",
         display: "flex",
         justifyContent: "center",
