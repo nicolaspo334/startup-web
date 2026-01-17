@@ -24,6 +24,10 @@ export default function OwnerAddSpace() {
     const [priceLarge, setPriceLarge] = useState("");
     const [minDays, setMinDays] = useState("1");
 
+    // Payment Info
+    const [iban, setIban] = useState("");
+    const [beneficiaryName, setBeneficiaryName] = useState("");
+
     // Image
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [imageBase64, setImageBase64] = useState<string>("");
@@ -75,6 +79,8 @@ export default function OwnerAddSpace() {
                     price_medium: parseFloat(priceMedium) || 0,
                     price_large: parseFloat(priceLarge) || 0,
                     min_days: parseInt(minDays) || 1,
+                    iban,
+                    beneficiary_name: beneficiaryName,
                     image_base64: imageBase64
                 }),
             });
@@ -274,6 +280,26 @@ export default function OwnerAddSpace() {
                             </div>
 
                             <div style={styles.fieldGroup}>
+                                <label style={styles.label}>Información de Cobro</label>
+                                <div style={{ ...styles.fieldGroup, gap: 12 }}>
+                                    <input
+                                        style={styles.input}
+                                        value={beneficiaryName}
+                                        onChange={e => setBeneficiaryName(e.target.value)}
+                                        placeholder="Beneficiario (Nombre y Apellidos)"
+                                        required
+                                    />
+                                    <input
+                                        style={styles.input}
+                                        value={iban}
+                                        onChange={e => setIban(e.target.value)}
+                                        placeholder="IBAN (ES...)"
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            <div style={styles.fieldGroup}>
                                 <label style={styles.label}>Estancia mínima (días)</label>
                                 <input
                                     style={styles.input}
@@ -299,6 +325,7 @@ export default function OwnerAddSpace() {
                     </form>
                 </div>
             </div>
+
             <SuccessModal
                 isOpen={successOpen}
                 onClose={() => {

@@ -26,6 +26,10 @@ export default function OwnerEditSpace() {
     const [priceLarge, setPriceLarge] = useState("");
     const [minDays, setMinDays] = useState("1");
 
+    // Payment Info
+    const [iban, setIban] = useState("");
+    const [beneficiaryName, setBeneficiaryName] = useState("");
+
     // Image
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [imageBase64, setImageBase64] = useState<string>("");
@@ -56,6 +60,8 @@ export default function OwnerEditSpace() {
                     setPriceMedium(String(s.price_medium || 0));
                     setPriceLarge(String(s.price_large || 0));
                     setMinDays(String(s.min_days || 1));
+                    setIban(s.iban || "");
+                    setBeneficiaryName(s.beneficiary_name || "");
 
                     // Handle image preview
                     if (s.image_base64) {
@@ -139,6 +145,8 @@ export default function OwnerEditSpace() {
                     price_medium: parseFloat(priceMedium) || 0,
                     price_large: parseFloat(priceLarge) || 0,
                     min_days: parseInt(minDays) || 1,
+                    iban,
+                    beneficiary_name: beneficiaryName,
                     image_base64: imageBase64
                 }),
             });
@@ -339,6 +347,27 @@ export default function OwnerEditSpace() {
                                 </div>
                             </div>
 
+                            {/* Payment Information */}
+                            <div style={styles.fieldGroup}>
+                                <label style={styles.label}>Información de Cobro</label>
+                                <div style={{ ...styles.fieldGroup, gap: 12 }}>
+                                    <input
+                                        style={styles.input}
+                                        value={beneficiaryName}
+                                        onChange={e => setBeneficiaryName(e.target.value)}
+                                        placeholder="Beneficiario (Nombre y Apellidos)"
+                                        required
+                                    />
+                                    <input
+                                        style={styles.input}
+                                        value={iban}
+                                        onChange={e => setIban(e.target.value)}
+                                        placeholder="IBAN (ES...)"
+                                        required
+                                    />
+                                </div>
+                            </div>
+
                             <div style={styles.fieldGroup}>
                                 <label style={styles.label}>Estancia mínima (días)</label>
                                 <input
@@ -365,6 +394,7 @@ export default function OwnerEditSpace() {
                     </form>
                 </div>
             </div>
+
             <SuccessModal
                 isOpen={successOpen}
                 onClose={() => {

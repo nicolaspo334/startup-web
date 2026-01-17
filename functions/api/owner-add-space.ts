@@ -21,6 +21,8 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
             price_small,
             price_medium,
             price_large,
+            iban,
+            beneficiary_name,
             image_base64
         } = body;
 
@@ -88,9 +90,10 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
              id, owner_id, name, address, province, country, type, size_m2, 
              capacity_small, capacity_medium, capacity_large, 
              price_small, price_medium, price_large,
-             image_base64, lat, lng, min_days
+             image_base64, lat, lng, min_days,
+             iban, beneficiary_name
            ) 
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
         ).bind(
             id,
             owner_id,
@@ -110,7 +113,9 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
             filename,
             lat,
             lng,
-            body.min_days || 1
+            body.min_days || 1,
+            body.iban || null,
+            body.beneficiary_name || null
         ).run();
 
         return Response.json({ ok: true, id });
