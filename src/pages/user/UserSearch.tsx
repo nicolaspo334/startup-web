@@ -320,7 +320,7 @@ export default function UserSearch() {
             </div>
 
             {/* Map */}
-            <MapContainer center={[40.416775, -3.703790]} zoom={13} style={{ width: "100%", height: "100%" }}>
+            {/* <MapContainer center={[40.416775, -3.703790]} zoom={13} style={{ width: "100%", height: "100%" }}>
                 <TileLayer
                     url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
@@ -344,7 +344,7 @@ export default function UserSearch() {
                                     <p style={{ margin: 0, fontSize: 12, color: "#666" }}>{space.type} • {space.size_m2}m²</p>
                                     <p style={{ margin: "4px 0", fontSize: 12 }}>{space.address}</p>
 
-                                    {/* Estimated Price Display */}
+                                    
                                     {(requirements && startDate && endDate) && (
                                         <div style={{ margin: "8px 0", padding: "6px", background: "#f0f0f0", borderRadius: 6 }}>
                                             <p style={{ margin: 0, fontSize: 11, color: "#555" }}>Est. Total:</p>
@@ -378,7 +378,7 @@ export default function UserSearch() {
                         </Marker>
                     );
                 })}
-            </MapContainer>
+            </MapContainer> */}
 
             {/* Booking Modal Overlay */}
             {/* Payment Modal */}
