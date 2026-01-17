@@ -15,6 +15,7 @@ interface Space {
     price_medium: number;
     price_large: number;
     image_base64: string;
+    min_days?: number;
 }
 
 interface Reservation {
@@ -164,6 +165,18 @@ export default function BookingModal({
 
         if (!startDate || !endDate) {
             alert("Selecciona las fechas");
+            return;
+        }
+
+        // Validate Minimum Stay
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const diffTime = Math.abs(end.getTime() - start.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // Inclusive days
+
+        if (space.min_days && diffDays < space.min_days) {
+            // Using alert for now, but also showing UI warning below
+            alert(`Este espacio requiere una estancia mínima de ${space.min_days} días.`);
             return;
         }
 
@@ -321,6 +334,16 @@ export default function BookingModal({
                                 {(!startDate || !endDate) && (
                                     <p style={{ fontSize: 12, color: "#666" }}>Selecciona fechas para ver disponibilidad</p>
                                 )}
+                                {startDate && endDate && (() => {
+                                    const s = new Date(startDate);
+                                    const e = new Date(endDate);
+                                    const diff = Math.ceil(Math.abs(e.getTime() - s.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+                                    return (space.min_days && diff < space.min_days) ? (
+                                        <p style={{ fontSize: 12, color: "#dc3545", fontWeight: "bold", marginTop: 5 }}>
+                                            ⚠️ Estancia mínima: {space.min_days} días (has seleccionado {diff})
+                                        </p>
+                                    ) : null;
+                                })()}
 
                                 <div style={styles.summaryBox}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -379,7 +402,29 @@ export default function BookingModal({
 
                                 <div style={styles.buttonRow}>
                                     <button style={styles.cancelBtn} className="btn-secondary" onClick={handleClose}>Cancelar</button>
-                                    <button style={styles.reserveBtn} className="btn-primary" onClick={handleNext}>
+                                    <button
+                                        style={{
+                                            ...styles.reserveBtn,
+                                            opacity: (() => {
+                                                if (!startDate || !endDate) return 0.5;
+                                                const s = new Date(startDate);
+                                                const e = new Date(endDate);
+                                                const diff = Math.ceil(Math.abs(e.getTime() - s.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+                                                if (space.min_days && diff < space.min_days) return 0.5;
+                                                return 1;
+                                            })(),
+                                            cursor: (() => {
+                                                if (!startDate || !endDate) return "not-allowed";
+                                                const s = new Date(startDate);
+                                                const e = new Date(endDate);
+                                                const diff = Math.ceil(Math.abs(e.getTime() - s.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+                                                if (space.min_days && diff < space.min_days) return "not-allowed";
+                                                return "pointer";
+                                            })()
+                                        }}
+                                        className="btn-primary"
+                                        onClick={handleNext}
+                                    >
                                         Continuar
                                     </button>
                                 </div>
