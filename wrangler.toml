@@ -23,3 +23,6 @@ database_id = "b7b16cf7-ec01-4354-8cd1-d238772bf316"
 [[r2_buckets]]
 binding = "BUCKET"
 bucket_name = "startup-spaces-bucket"
+
+[ai]
+binding = "AI"
