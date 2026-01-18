@@ -19,7 +19,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
         }
 
         const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
-            apiVersion: '2025-01-27.acacia', // Use latest or compatible
+            // apiVersion: '2025-01-27.acacia', // Removed to use default installed SDK version
         });
 
         // Create a PaymentIntent with 'manual' capture to hold funds
