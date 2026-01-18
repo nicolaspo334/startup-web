@@ -429,7 +429,7 @@ export default function BookingModal({
                                     </button>
                                 </div>
                             </>
-                        ) : (
+                        ) : step === 2 ? (
                             <>
                                 <h1 style={styles.title}>Verificación de Objetos</h1>
                                 <p style={styles.address}>Sube una foto clara de cada objeto para continuar.</p>
@@ -456,8 +456,66 @@ export default function BookingModal({
 
                                 <div style={styles.buttonRow}>
                                     <button style={styles.cancelBtn} className="btn-secondary" onClick={handleBack}>Atrás</button>
+                                    <button style={styles.reserveBtn} className="btn-primary" onClick={() => {
+                                        if (items.some(i => !i.file)) {
+                                            alert("Por favor, sube una foto para cada objeto.");
+                                            return;
+                                        }
+                                        setStep(3);
+                                    }}>
+                                        Continuar al Pago
+                                    </button>
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                <h1 style={styles.title}>Pago Seguro</h1>
+                                <p style={styles.address}>El dueño confirmará tu reserva antes de cobrarte.</p>
+                                <div style={styles.divider} />
+
+                                <div style={styles.summaryBox}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
+                                        <span>Total a pagar:</span>
+                                        <span style={{ fontWeight: "bold" }}>{totalPrice.toFixed(2)}€</span>
+                                    </div>
+                                    <p style={{ fontSize: 11, color: '#666', margin: 0 }}>
+                                        * Se realizará una retención en tu tarjeta. Solo se cobrará si el dueño acepta la reserva.
+                                    </p>
+                                </div>
+
+                                <div style={{ marginBottom: 20 }}>
+                                    <div style={styles.paymentMethods}>
+                                        <button style={styles.paymentMethodActive}>Tarjeta</button>
+                                        <button style={styles.paymentMethodInactive}>PayPal</button>
+                                    </div>
+
+                                    {/* Mock Card Form */}
+                                    <div style={styles.cardForm}>
+                                        <div style={styles.inputGroup}>
+                                            <label style={styles.label}>Número de Tarjeta</label>
+                                            <input style={styles.input} placeholder="0000 0000 0000 0000" />
+                                        </div>
+                                        <div style={styles.row}>
+                                            <div style={styles.inputGroup}>
+                                                <label style={styles.label}>Caducidad</label>
+                                                <input style={styles.input} placeholder="MM/AA" />
+                                            </div>
+                                            <div style={styles.inputGroup}>
+                                                <label style={styles.label}>CVC</label>
+                                                <input style={styles.input} placeholder="123" />
+                                            </div>
+                                        </div>
+                                        <div style={styles.inputGroup}>
+                                            <label style={styles.label}>Titular de la tarjeta</label>
+                                            <input style={styles.input} placeholder="Nombre Apellidos" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div style={styles.buttonRow}>
+                                    <button style={styles.cancelBtn} className="btn-secondary" onClick={() => setStep(2)}>Atrás</button>
                                     <button style={styles.reserveBtn} className="btn-primary" onClick={handleSubmit} disabled={loading}>
-                                        {loading ? "Enviando..." : "Confirmar Reserva"}
+                                        {loading ? "Procesando..." : "Confirmar Reserva"}
                                     </button>
                                 </div>
                             </>
@@ -476,7 +534,7 @@ export default function BookingModal({
                 }}
                 message={successMsg}
             />
-        </div>
+        </div >
     );
 }
 
@@ -561,6 +619,40 @@ const styles: Record<string, React.CSSProperties> = {
         borderRadius: 8,
         marginBottom: 8,
         border: '1px solid #eee'
+    },
+    paymentMethods: {
+        display: 'flex',
+        gap: 10,
+        marginBottom: 15
+    },
+    paymentMethodActive: {
+        flex: 1,
+        padding: '8px',
+        borderRadius: 6,
+        border: '1px solid black',
+        background: 'black',
+        color: 'white',
+        fontSize: 13,
+        cursor: 'pointer'
+    },
+    paymentMethodInactive: {
+        flex: 1,
+        padding: '8px',
+        borderRadius: 6,
+        border: '1px solid #ddd',
+        background: 'white',
+        color: '#444',
+        fontSize: 13,
+        cursor: 'pointer'
+    },
+    cardForm: {
+        background: '#f8f9fa',
+        padding: 15,
+        borderRadius: 10,
+        border: '1px solid #eee',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 10
     }
 };
 
