@@ -7,18 +7,18 @@ STRIPE_SECRET_KEY = "SECRET_KEY_HERE_ADD_IN_CLOUDFLARE_DASHBOARD"
 
 [[d1_databases]]
 binding = "SPACES_DB"
-database_name = "startup-spaces-db"
-database_id = "fb88ec6e-b353-41fa-8a6a-d240d99bc451"
+database_name = "guardy_spaces"
+database_id = "a5b9d3eb-c32a-4ad0-b8a6-4182e0ebcabc"
 
 [[d1_databases]]
 binding = "OWNER_DB"
-database_name = "startup-spaces-db"
-database_id = "fb88ec6e-b353-41fa-8a6a-d240d99bc451"
+database_name = "guardy_owners"
+database_id = "a1105100-f8be-4a52-a09a-dcc7052a081a"
 
 [[d1_databases]]
 binding = "USER_DB"
-database_name = "startup-spaces-db"
-database_id = "fb88ec6e-b353-41fa-8a6a-d240d99bc451"
+database_name = "guardy_users"
+database_id = "b7b16cf7-ec01-4354-8cd1-d238772bf316"
 
 [[r2_buckets]]
 binding = "BUCKET"
