@@ -1,6 +1,13 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import SuccessModal from "./SuccessModal";
+import { loadStripe } from "@stripe/stripe-js";
+import { Elements, useStripe, useElements, PaymentElement } from "@stripe/react-stripe-js";
+import { STRIPE_PUBLIC_KEY } from "../config";
+
+// Load Stripe outside of render
+const stripePromise = loadStripe(STRIPE_PUBLIC_KEY);
 
 interface Space {
     id: string;
@@ -37,6 +44,75 @@ interface BookingModalProps {
     onSuccess?: () => void;
 }
 
+// --- Checkout Form Component (Child of Elements) ---
+const CheckoutForm = ({
+    totalPrice,
+    onSubmit,
+    onBack,
+    loading
+}: {
+    totalPrice: number,
+    onSubmit: (paymentMethodId?: string) => void,
+    onBack: () => void,
+    loading: boolean
+}) => {
+    const stripe = useStripe();
+    const elements = useElements();
+    const [msg, setMsg] = useState("");
+    const [localLoading, setLocalLoading] = useState(false);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (!stripe || !elements) return;
+
+        setLocalLoading(true);
+        setMsg("");
+
+        // Trigger the payment confirmation (Authentication + Authorization - capture manual)
+        try {
+            const { error, paymentIntent } = await stripe.confirmPayment({
+                elements,
+                confirmParams: {
+                    // We don't actually intend to redirect if unnecessary, 
+                    // but return_url is required by Stripe just in case.
+                    return_url: window.location.origin + "/payment-finished",
+                },
+                redirect: "if_required",
+            });
+
+            if (error) {
+                setMsg(error.message || "Error en el pago");
+                setLocalLoading(false);
+            } else if (paymentIntent && (paymentIntent.status === "requires_capture" || paymentIntent.status === "succeeded")) {
+                // Success! The money is on hold.
+                onSubmit(paymentIntent.id);
+            } else {
+                setMsg("Estado del pago: " + (paymentIntent?.status || "desconocido"));
+                setLocalLoading(false);
+            }
+        } catch (err: any) {
+            setMsg(err.message || "Error desconocido");
+            setLocalLoading(false);
+        }
+    };
+
+    return (
+        <form onSubmit={handleSubmit}>
+            <PaymentElement />
+            {msg && <div style={{ color: "#d32f2f", marginTop: 10, fontSize: 13, background: "#ffebee", padding: 10, borderRadius: 6 }}>{msg}</div>}
+
+            <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
+                <button type="button" style={styles.cancelBtn} className="btn-secondary" onClick={onBack}>Atrás</button>
+                <button type="submit" style={styles.reserveBtn} className="btn-primary" disabled={loading || localLoading || !stripe}>
+                    {(loading || localLoading) ? "Procesando..." : `Pagar ${totalPrice.toFixed(2)}€`}
+                </button>
+            </div>
+        </form>
+    );
+};
+
+
 export default function BookingModal({
     space,
     onClose,
@@ -53,7 +129,7 @@ export default function BookingModal({
     const [successMsg, setSuccessMsg] = useState("");
 
     // UI State
-    const [step, setStep] = useState(1); // 1: Details, 2: Verification
+    const [step, setStep] = useState(1); // 1: Details, 2: Verification, 3: Payment
     const [isClosing, setIsClosing] = useState(false);
     const [loading, setLoading] = useState(false);
 
@@ -67,6 +143,11 @@ export default function BookingModal({
     // Verification State (Step 2)
     const [items, setItems] = useState<{ type: string, index: number, file: File | null, preview: string }[]>([]);
 
+    // Payment State (Step 3)
+    const [paymentMethod, setPaymentMethod] = useState<'card' | 'paypal'>('card');
+    const [clientSecret, setClientSecret] = useState("");
+    // const [paymentIntentId, setPaymentIntentId] = useState(""); // Not strictly needed in state if passed through onSubmit
+
     useEffect(() => {
         // Fetch Existing Reservations for availability calculation
         fetch(`/api/get-space-reservations?space_id=${space.id}`)
@@ -79,7 +160,6 @@ export default function BookingModal({
 
     // Calculate dynamic availability
     const getAvailability = () => {
-        // ... (Using same logic as before, just ensuring it calculates correctly)
         if (!startDate || !endDate) return { small: 0, medium: 0, large: 0 };
         if (startDate > endDate) return { small: 0, medium: 0, large: 0 };
 
@@ -143,11 +223,8 @@ export default function BookingModal({
     };
     const totalPrice = calculateTotal();
 
-    // Reset quantities if availability drops, but only if user interacts (to avoid resetting on initial load if tight)
-    // Actually for editing we might need to be careful, but simplified for now:
     useEffect(() => {
         if (startDate && endDate) {
-            // Only clamp if we are successfully calculating availability
             if (qtySmall > availability.small) setQtySmall(availability.small);
             if (qtyMedium > availability.medium) setQtyMedium(availability.medium);
             if (qtyLarge > availability.large) setQtyLarge(availability.large);
@@ -175,7 +252,6 @@ export default function BookingModal({
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // Inclusive days
 
         if (space.min_days && diffDays < space.min_days) {
-            // Using alert for now, but also showing UI warning below
             alert(`Este espacio requiere una estancia mínima de ${space.min_days} días.`);
             return;
         }
@@ -185,14 +261,15 @@ export default function BookingModal({
             return;
         }
 
-        // Prepare items for verification
-        const newItems = [];
-        for (let i = 0; i < qtySmall; i++) newItems.push({ type: "Pequeño", index: i + 1, file: null, preview: "" });
-        for (let i = 0; i < qtyMedium; i++) newItems.push({ type: "Mediano", index: i + 1, file: null, preview: "" });
-        for (let i = 0; i < qtyLarge; i++) newItems.push({ type: "Grande", index: i + 1, file: null, preview: "" });
-
-        setItems(newItems);
-        setStep(2);
+        // Prepare items for verification if Step 1
+        if (step === 1) {
+            const newItems = [];
+            for (let i = 0; i < qtySmall; i++) newItems.push({ type: "Pequeño", index: i + 1, file: null, preview: "" });
+            for (let i = 0; i < qtyMedium; i++) newItems.push({ type: "Mediano", index: i + 1, file: null, preview: "" });
+            for (let i = 0; i < qtyLarge; i++) newItems.push({ type: "Grande", index: i + 1, file: null, preview: "" });
+            setItems(newItems);
+            setStep(2);
+        }
     };
 
     // Step 2 Logic (Image Upload)
@@ -213,49 +290,82 @@ export default function BookingModal({
     };
 
     const handleBack = () => {
-        setStep(1);
+        if (step === 2) setStep(1);
+        if (step === 3) setStep(2);
     };
 
-    const handleSubmit = async () => {
-        const userId = localStorage.getItem("user_id");
-        if (!userId) return;
-
+    // Step 2 -> Step 3
+    const handleGoToPayment = async () => {
         if (items.some(i => !i.file)) {
             alert("Por favor, sube una foto para cada objeto.");
             return;
         }
 
         setLoading(true);
+        // Initialize Payment Intent
+        try {
+            const res = await fetch("/api/create-payment-intent", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ amount: totalPrice })
+            });
+            const data = await res.json() as any;
+
+            if (data.clientSecret) {
+                setClientSecret(data.clientSecret);
+                // setPaymentIntentId(data.id);
+                setStep(3);
+            } else {
+                alert("Error al iniciar el pago: " + (data.error || "Desconocido"));
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Error de conexión al iniciar pago");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Final Submit (Step 3) - Called by Stripe Form or PayPal Button
+    const handleFinalSubmit = async (confirmedPaymentId?: string) => {
+        const userId = localStorage.getItem("user_id");
+        if (!userId) return;
+
+        setLoading(true);
         try {
             const itemPhotos = items.map(i => i.preview);
+
+            const payload = {
+                user_id: userId,
+                space_id: space.id,
+                start_date: startDate,
+                end_date: endDate,
+                qty_small: qtySmall,
+                qty_medium: qtyMedium,
+                qty_large: qtyLarge,
+                item_photos: itemPhotos,
+                status: "pending", // Owner needs to approve
+                payment_method: paymentMethod,
+                payment_intent_id: confirmedPaymentId || "paypal_mock_id",
+                payment_status: confirmedPaymentId ? "requires_capture" : "pending_approval"
+            };
 
             const res = await fetch("/api/create-reservation", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    user_id: userId,
-                    space_id: space.id,
-                    start_date: startDate,
-                    end_date: endDate,
-                    qty_small: qtySmall,
-                    qty_medium: qtyMedium,
-                    qty_large: qtyLarge,
-                    item_photos: itemPhotos,
-                    status: "pending"
-                })
+                body: JSON.stringify(payload)
             });
 
             const data = await res.json() as any;
             if (data.ok) {
-                setSuccessMsg("¡Solicitud enviada! El dueño revisará tus objetos.");
+                setSuccessMsg("¡Reserva solicitada! El dinero está retenido hasta la aprobación del dueño.");
                 setSuccessOpen(true);
-                // Delay close and callback until modal is closed or after a short delay
                 setTimeout(() => {
                     if (onSuccess) onSuccess();
                     handleClose();
-                }, 3000); // Give time to read and see animation
+                }, 3000);
             } else {
-                alert("Error: " + data.error);
+                alert("Error al guardar reserva: " + data.error);
             }
         } catch (err) {
             console.error(err);
@@ -285,7 +395,7 @@ export default function BookingModal({
                 <div
                     style={{ ...styles.card, animation: isClosing ? 'scaleOut 0.3s forwards' : 'expandFromCenter 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards' }}
                 >
-                    {/* Left: Image (Only visible in Step 1 or generic) -- Let's keep it constant */}
+                    {/* Left: Image */}
                     <div style={styles.imageSection}>
                         {imageUrl ? (
                             <img src={imageUrl} style={styles.image} alt={space.name} />
@@ -331,20 +441,6 @@ export default function BookingModal({
 
                                 {/* Capacity */}
                                 <div style={styles.sectionHeader}>Objetos a reservar</div>
-                                {(!startDate || !endDate) && (
-                                    <p style={{ fontSize: 12, color: "#666" }}>Selecciona fechas para ver disponibilidad</p>
-                                )}
-                                {startDate && endDate && (() => {
-                                    const s = new Date(startDate);
-                                    const e = new Date(endDate);
-                                    const diff = Math.ceil(Math.abs(e.getTime() - s.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-                                    return (space.min_days && diff < space.min_days) ? (
-                                        <p style={{ fontSize: 12, color: "#dc3545", fontWeight: "bold", marginTop: 5 }}>
-                                            ⚠️ Estancia mínima: {space.min_days} días (has seleccionado {diff})
-                                        </p>
-                                    ) : null;
-                                })()}
-
                                 <div style={styles.summaryBox}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                         <span style={{ fontWeight: 600 }}>Total:</span>
@@ -395,7 +491,6 @@ export default function BookingModal({
                                 </div>
 
                                 <div style={styles.divider} />
-
                                 <div style={styles.warningBox}>
                                     ⚠️ Antes de realizar tu reserva deberás enviar fotos para aprobación.
                                 </div>
@@ -403,27 +498,10 @@ export default function BookingModal({
                                 <div style={styles.buttonRow}>
                                     <button style={styles.cancelBtn} className="btn-secondary" onClick={handleClose}>Cancelar</button>
                                     <button
-                                        style={{
-                                            ...styles.reserveBtn,
-                                            opacity: (() => {
-                                                if (!startDate || !endDate) return 0.5;
-                                                const s = new Date(startDate);
-                                                const e = new Date(endDate);
-                                                const diff = Math.ceil(Math.abs(e.getTime() - s.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-                                                if (space.min_days && diff < space.min_days) return 0.5;
-                                                return 1;
-                                            })(),
-                                            cursor: (() => {
-                                                if (!startDate || !endDate) return "not-allowed";
-                                                const s = new Date(startDate);
-                                                const e = new Date(endDate);
-                                                const diff = Math.ceil(Math.abs(e.getTime() - s.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-                                                if (space.min_days && diff < space.min_days) return "not-allowed";
-                                                return "pointer";
-                                            })()
-                                        }}
+                                        style={{ ...styles.reserveBtn, opacity: (!startDate || !endDate) ? 0.5 : 1 }}
                                         className="btn-primary"
                                         onClick={handleNext}
+                                        disabled={!startDate || !endDate}
                                     >
                                         Continuar
                                     </button>
@@ -456,14 +534,8 @@ export default function BookingModal({
 
                                 <div style={styles.buttonRow}>
                                     <button style={styles.cancelBtn} className="btn-secondary" onClick={handleBack}>Atrás</button>
-                                    <button style={styles.reserveBtn} className="btn-primary" onClick={() => {
-                                        if (items.some(i => !i.file)) {
-                                            alert("Por favor, sube una foto para cada objeto.");
-                                            return;
-                                        }
-                                        setStep(3);
-                                    }}>
-                                        Continuar al Pago
+                                    <button style={styles.reserveBtn} className="btn-primary" onClick={handleGoToPayment}>
+                                        {loading ? "Cargando..." : "Continuar al Pago"}
                                     </button>
                                 </div>
                             </>
@@ -485,38 +557,46 @@ export default function BookingModal({
 
                                 <div style={{ marginBottom: 20 }}>
                                     <div style={styles.paymentMethods}>
-                                        <button style={styles.paymentMethodActive}>Tarjeta</button>
-                                        <button style={styles.paymentMethodInactive}>PayPal</button>
+                                        <button
+                                            style={paymentMethod === 'card' ? styles.paymentMethodActive : styles.paymentMethodInactive}
+                                            onClick={() => setPaymentMethod('card')}
+                                        >
+                                            Tarjeta (Stripe)
+                                        </button>
+                                        <button
+                                            style={paymentMethod === 'paypal' ? styles.paymentMethodActive : styles.paymentMethodInactive}
+                                            onClick={() => setPaymentMethod('paypal')}
+                                        >
+                                            PayPal
+                                        </button>
                                     </div>
 
-                                    {/* Mock Card Form */}
-                                    <div style={styles.cardForm}>
-                                        <div style={styles.inputGroup}>
-                                            <label style={styles.label}>Número de Tarjeta</label>
-                                            <input style={styles.input} placeholder="0000 0000 0000 0000" />
-                                        </div>
-                                        <div style={styles.row}>
-                                            <div style={styles.inputGroup}>
-                                                <label style={styles.label}>Caducidad</label>
-                                                <input style={styles.input} placeholder="MM/AA" />
+                                    {paymentMethod === 'card' ? (
+                                        clientSecret ? (
+                                            <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: 'stripe' } }}>
+                                                <CheckoutForm
+                                                    totalPrice={totalPrice}
+                                                    onSubmit={(pid) => handleFinalSubmit(pid)}
+                                                    onBack={handleBack}
+                                                    loading={loading}
+                                                />
+                                            </Elements>
+                                        ) : (
+                                            <div style={{ textAlign: 'center', padding: 20 }}>Cargando seguridad de pago...</div>
+                                        )
+                                    ) : (
+                                        <div style={styles.paypalBox}>
+                                            <p style={{ margin: '0 0 10px 0', fontSize: 14 }}>
+                                                Serás redirigido a PayPal para completar el pago de forma segura.
+                                            </p>
+                                            <button style={styles.paypalBtn} onClick={() => handleFinalSubmit("paypal_mock_id")}>
+                                                Pagar con PayPal
+                                            </button>
+                                            <div style={{ marginTop: 20 }}>
+                                                <button style={styles.cancelBtn} onClick={handleBack}>Atrás</button>
                                             </div>
-                                            <div style={styles.inputGroup}>
-                                                <label style={styles.label}>CVC</label>
-                                                <input style={styles.input} placeholder="123" />
-                                            </div>
                                         </div>
-                                        <div style={styles.inputGroup}>
-                                            <label style={styles.label}>Titular de la tarjeta</label>
-                                            <input style={styles.input} placeholder="Nombre Apellidos" />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div style={styles.buttonRow}>
-                                    <button style={styles.cancelBtn} className="btn-secondary" onClick={() => setStep(2)}>Atrás</button>
-                                    <button style={styles.reserveBtn} className="btn-primary" onClick={handleSubmit} disabled={loading}>
-                                        {loading ? "Procesando..." : "Confirmar Reserva"}
-                                    </button>
+                                    )}
                                 </div>
                             </>
                         )}
@@ -534,7 +614,7 @@ export default function BookingModal({
                 }}
                 message={successMsg}
             />
-        </div >
+        </div>
     );
 }
 
@@ -653,7 +733,22 @@ const styles: Record<string, React.CSSProperties> = {
         display: 'flex',
         flexDirection: 'column',
         gap: 10
+    },
+    paypalBox: {
+        background: '#f9f9f9',
+        padding: 20,
+        borderRadius: 10,
+        border: '1px solid #eee',
+        textAlign: 'center'
+    },
+    paypalBtn: {
+        background: '#0070ba',
+        color: 'white',
+        border: 'none',
+        padding: '10px 20px',
+        borderRadius: 20,
+        fontWeight: 'bold',
+        cursor: 'pointer',
+        fontSize: 14
     }
 };
-
-// Add responsive logic via media queries or JS if needed, but flex handles basics.

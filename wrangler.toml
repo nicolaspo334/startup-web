@@ -1,0 +1,25 @@
+name = "startup-web"
+pages_build_output_dir = "dist"
+compatibility_date = "2024-01-01"
+
+[vars]
+STRIPE_SECRET_KEY = "SECRET_KEY_HERE_ADD_IN_CLOUDFLARE_DASHBOARD"
+
+[[d1_databases]]
+binding = "SPACES_DB"
+database_name = "startup-spaces-db"
+database_id = "fb88ec6e-b353-41fa-8a6a-d240d99bc451"
+
+[[d1_databases]]
+binding = "OWNER_DB"
+database_name = "startup-spaces-db"
+database_id = "fb88ec6e-b353-41fa-8a6a-d240d99bc451"
+
+[[d1_databases]]
+binding = "USER_DB"
+database_name = "startup-spaces-db"
+database_id = "fb88ec6e-b353-41fa-8a6a-d240d99bc451"
+
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "startup-spaces-bucket"
